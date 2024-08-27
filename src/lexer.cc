@@ -93,19 +93,18 @@ Token Lexer::consume(TokenKind kind, int offset)
     size_t lexeme_size = 0;
     if (lex_curr == this->code.length())
     {
-        char *lexeme = (char*)malloc(sizeof(char));
+        token.lexeme = new char[1];
         lexeme_size = 0;
-        memset(lexeme, '\0', 1);
-        token.lexeme = lexeme;
+        memset(token.lexeme, '\0', 1);
     }
     else
     {
         lexeme_size = this->lex_curr - this->lex_begin;
-        lexeme_size = (kind == TOKEN_COMMENT_SINGLE) ? lexeme_size -2 : lexeme_size;
-        char *lexeme = (char*)malloc(sizeof(char) * (lexeme_size + 1));
-        memset(lexeme, '\0', lexeme_size + 1);
-        this->code.copy(lexeme, lexeme_size, this->lex_begin);
-        token.lexeme = lexeme;
+        if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 2;
+        
+        token.lexeme = new char[lexeme_size + 1];
+        memset(token.lexeme, '\0', lexeme_size + 1);
+        this->code.copy(token.lexeme, lexeme_size, this->lex_begin);
     }
     //std::cout << "Consume: " << lex_curr << " " << lex_begin << " lexeme: " << token.lexeme << std::endl;
     Location token_location;
