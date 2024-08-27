@@ -1,7 +1,10 @@
 
 module main; // This is a comment
 
-import std;
+import std; /* this is a
+
+
+multiline comment */
 
 var sum : i8 = 3 + 5 * 4;
 

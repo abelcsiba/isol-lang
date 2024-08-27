@@ -55,6 +55,8 @@ bool Lexer::isAlphaNumeric()
     return isAlpha() || isDigit();
 }
 
+// ----- Tokenizers -----
+
 bool Lexer::adjustPos(int offset)
 {
     this->lex_curr += offset;
@@ -86,6 +88,34 @@ const char Lexer::peek(int offset)
     return this->code.at(lex_curr + offset);
 }
 
+void Lexer::eatMultilineComment(Token &token)
+{
+        Location saved_loc = { .col = this->loc.col, .row = this->loc.row };
+        char c;
+        char c1;
+        advance(2);
+        bool found = false;
+        while (!isEof() && !found)
+        {
+            c = peek(0);
+            c1 = peek(1);
+
+            if ( c == '*' && c1 == '/')
+                found = true;
+            else
+                advance();
+        }
+        if (found)
+        {
+            token = consume(TOKEN_MULTI_COMMENT, 2);
+        }
+        else
+        {
+            token = consume(TOKEN_ERROR);
+        }
+        token.location = saved_loc;
+}
+
 Token Lexer::consume(TokenKind kind, int offset)
 {
     adjustPos(offset);
@@ -95,15 +125,15 @@ Token Lexer::consume(TokenKind kind, int offset)
     {
         token.lexeme = new char[1];
         lexeme_size = 0;
-        memset(token.lexeme, '\0', 1);
+        std::memset(token.lexeme, '\0', 1);
     }
     else
     {
         lexeme_size = this->lex_curr - this->lex_begin;
-        if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 2;
-        
+        if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 1;
+
         token.lexeme = new char[lexeme_size + 1];
-        memset(token.lexeme, '\0', lexeme_size + 1);
+        std::memset(token.lexeme, '\0', lexeme_size + 1);
         this->code.copy(token.lexeme, lexeme_size, this->lex_begin);
     }
     //std::cout << "Consume: " << lex_curr << " " << lex_begin << " lexeme: " << token.lexeme << std::endl;
@@ -137,8 +167,8 @@ Token Lexer::nextToken()
 
     Token token;
 
-    const char c = peek(0);
-    const char c1 = peek(1);
+    auto c = peek(0);
+    auto c1 = peek(1);
 
     if ( c == '+' && c1 == '=' ) token = consume(TOKEN_PLUS_EQUAL, 2);
     else if ( c == '+' && c1 == '+' ) token = consume(TOKEN_PLUS_PLUS, 2);
@@ -151,8 +181,8 @@ Token Lexer::nextToken()
     else if ( c == '=' && c1 == '=' ) token = consume(TOKEN_EQUAL_EQUAL, 2);
     else if ( c == '!' && c1 == '=' ) token = consume(TOKEN_BANG_EQUAL, 2);
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
-    else if ( c == '/' && c1 == '/' ) { do { advance(); } while (peek(0) != '\n'); token = consume(TOKEN_COMMENT_SINGLE, 2); }
-    // TODO: Continue with multi-line comment
+    else if ( c == '/' && c1 == '/' ) { do { advance(); } while (peek(0) != '\n'); token = consume(TOKEN_COMMENT_SINGLE, 1); this->loc.row += 1; }
+    else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '+') token = consume(TOKEN_PLUS, 1);
     else if ( c == '-' ) token = consume(TOKEN_MINUS, 1);
     else if ( c == '/' ) token = consume(TOKEN_SLASH, 1);
@@ -176,7 +206,7 @@ Token Lexer::nextToken()
         token.kind = TOKEN_IDENTIFIER;
         if (isShadower()) 
         {
-            // TODO: Set shadower flag
+            token.shadower = true;
             lex_begin += 1;
             advance();
         }

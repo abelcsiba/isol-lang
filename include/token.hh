@@ -22,6 +22,7 @@ typedef struct /* Token */ {
     char *lexeme;
     Location location;
     TokenErrorCode err;
+    bool shadower = false;
 } Token;
 
 void newToken(Token &token, const int col, const int row, TokenKind kind, TokenErrorCode err);

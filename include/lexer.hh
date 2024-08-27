@@ -34,6 +34,7 @@ private:
     const char peek(int offset = 1);
     Token consume(TokenKind kind, int offset = 0);
     bool match(const char *keyword);
+    void eatMultilineComment(Token &token);
     Token nextToken();
     void addEofToken();
 
