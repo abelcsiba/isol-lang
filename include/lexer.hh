@@ -1,6 +1,5 @@
-#ifndef __LEXER_HH__
-#define __LEXER_HH__
 
+#pragma once
 
 #include <string_view>
 #include <string>
@@ -8,12 +7,8 @@
 #include <vector>
 
 #include "token.hh"
+#include "util.hh"
 
-
-typedef struct {
-    std::string name;
-    std::filesystem::path location;
-} CodeFile;
 
 class Lexer {
 private:
@@ -49,5 +44,3 @@ public:
 
     bool lex();    
 };
-
-#endif

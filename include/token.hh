@@ -1,8 +1,5 @@
 
-
-#ifndef __TOKEN_HH__
-#define __TOKEN_HH__
-
+#pragma once
 
 #include <string>
 
@@ -28,5 +25,3 @@ typedef struct /* Token */ {
 } Token;
 
 void newToken(Token &token, const int col, const int row, TokenKind kind, TokenErrorCode err);
-
-#endif

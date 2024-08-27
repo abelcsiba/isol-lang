@@ -1,29 +1,31 @@
 
-module main;
+module main; // This is a comment
 
-import io;
+import std;
+
+var sum : i8 = 3 + 5 * 4;
 
 record Person {
-	var name : String;
-	var age : i8;
+  var first_name : str;
 }
 
-pure incAge(age : i8) -> i8 {
-	return age + 1;
+entity Car {
+  var type : str;
+
+  proc foo(input : str) {
+	this.type = input;
+  }
+
+  proc baz() -> i8 {
+    return 42;
+  }
 }
 
-entity Reader {
-	var store : i8;
-
-	proc inVal(input : i8) {
-		this.store = input;
-	}
-
-	proc loadVal() -> i8 {
-		return this.store;
-	}
+pure bar(first : i8, second: i16) -> i8 {
+  return first + second;
 }
 
 entry {
-
+  var car : Car;
+  var result : i8 = car.baz();
 }

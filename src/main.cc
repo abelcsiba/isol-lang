@@ -7,8 +7,7 @@
 
 #include "lexer.hh"
 #include "cresult.hh"
-#include "util.hh"
-#include <string.h>
+#include "file_manager.hh"
 
 
 int main(int argc, char **argv)
@@ -22,25 +21,11 @@ int main(int argc, char **argv)
 	}
 
 	CodeFile cfile;
-	cfile.name = argv[1];
-	std::filesystem::path rel_dir = std::filesystem::current_path();
-	cfile.location = rel_dir;
+	FileManager manager;
 
-	std::ifstream source(cfile.name, std::ios::binary);
-	std::string code;
+	int error = manager.loadFile(cfile, argv[1]);
 
-	source.seekg(0, std::ios::end);   
-	code.reserve(source.tellg());
-	source.seekg(0, std::ios::beg);
-
-	code.assign((std::istreambuf_iterator<char>(source)),
-            std::istreambuf_iterator<char>());
-
-	char *buffer = (char*)malloc(sizeof(char) * (code.length() + 1));
-	memset(buffer, '\0', code.length() + 1);
-	memcpy(buffer, code.c_str(), code.length());
-
-	Lexer *lexer = new Lexer(buffer, cfile);
+	Lexer *lexer = new Lexer(/*buffer*/ cfile.code, cfile);
 
 	bool verdict = lexer->lex();
 

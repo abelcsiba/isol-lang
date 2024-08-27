@@ -1,11 +1,7 @@
 
-
-#ifndef __CRESULT_HH__
-#define __CRESULT_HH__
+#pragma once
 
 typedef enum /* CResult */ {
     SUCCESS = 0,
     ERROR = 1,
 } CResult;
-
-#endif

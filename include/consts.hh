@@ -1,7 +1,5 @@
 
-
-#ifndef __CONSTS_HH__
-#define __CONSTS_HH__
+#pragma once
 
 namespace KW 
 {
@@ -32,5 +30,3 @@ namespace KW
     const char* STR{"str"};
 
 }
-
-#endif
