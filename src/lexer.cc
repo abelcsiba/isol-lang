@@ -90,30 +90,30 @@ const char Lexer::peek(int offset)
 
 void Lexer::eatMultilineComment(Token &token)
 {
-        Location saved_loc = { .col = this->loc.col, .row = this->loc.row };
-        char c;
-        char c1;
-        advance(2);
-        bool found = false;
-        while (!isEof() && !found)
-        {
-            c = peek(0);
-            c1 = peek(1);
+    Location saved_loc = { .col = this->loc.col, .row = this->loc.row };
+    char c;
+    char c1;
+    advance(2);
+    bool found = false;
+    while (!isEof() && !found)
+    {
+        c = peek(0);
+        c1 = peek(1);
 
-            if ( c == '*' && c1 == '/')
-                found = true;
-            else
-                advance();
-        }
-        if (found)
-        {
-            token = consume(TOKEN_MULTI_COMMENT, 2);
-        }
+        if ( c == '*' && c1 == '/')
+            found = true;
         else
-        {
-            token = consume(TOKEN_ERROR);
-        }
-        token.location = saved_loc;
+            advance();
+    }
+    if (found)
+    {
+        token = consume(TOKEN_MULTI_COMMENT, 2);
+    }
+    else
+    {
+        token = consume(TOKEN_ERROR);
+    }
+    token.location = saved_loc;
 }
 
 void Lexer::eatSinglelineComment(Token &token)
