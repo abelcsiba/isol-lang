@@ -49,6 +49,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_FLOAT";
         case TOKEN_FOR:
             return "TOKEN_FOR";
+        case TOKEN_GENERATOR:
+            return "TOKEN_GENERATOR";
         case TOKEN_GREATER:
             return "TOKEN_GREATER";
         case TOKEN_GREATER_EQUAL:

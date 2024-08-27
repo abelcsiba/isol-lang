@@ -124,6 +124,8 @@ void Lexer::eatSinglelineComment(Token &token)
     } while (peek(0) != '\n'); 
     token = consume(TOKEN_COMMENT_SINGLE, 1); 
     this->loc.row += 1;
+    this->loc.col = 0;
+    // 
 }
 
 void Lexer::eatIdentifier(Token &token)
@@ -248,6 +250,7 @@ Token Lexer::nextToken()
     else if ( c == '=' && c1 == '=' ) token = consume(TOKEN_EQUAL_EQUAL, 2);
     else if ( c == '!' && c1 == '=' ) token = consume(TOKEN_BANG_EQUAL, 2);
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
+    else if ( c == '<' && c1 == '-' ) token = consume(TOKEN_GENERATOR, 2);
     else if ( c == '/' && c1 == '/' ) eatSinglelineComment(token);
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '+') token = consume(TOKEN_PLUS, 1);
