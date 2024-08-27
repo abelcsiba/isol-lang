@@ -157,6 +157,35 @@ bool Lexer::match(const char *keyword)
     return false;
 }
 
+void Lexer::matchKeywords(Token &token)
+{
+    if (match(KW::IMPORT)) token = consume(TOKEN_IMPORT);
+    else if (match(KW::MODULE)) token = consume(TOKEN_MODULE);
+    else if (match(KW::RECORD)) token = consume(TOKEN_RECORD);
+    else if (match(KW::PURE)) token = consume(TOKEN_PURE);
+    else if (match(KW::RETURN)) token = consume(TOKEN_RETURN);
+    else if (match(KW::ENTITY)) token = consume(TOKEN_ENTITY);
+    else if (match(KW::VAR)) token = consume(TOKEN_VAR);
+    else if (match(KW::ENTRY)) token = consume(TOKEN_ENTRY);
+    else if (match(KW::PROC)) token = consume(TOKEN_PROC);
+    else if (match(KW::IF)) token = consume(TOKEN_IF);
+    else if (match(KW::ELSE)) token = consume(TOKEN_ELSE);
+    else if (match(KW::FOR)) token = consume(TOKEN_FOR);
+    else if (match(KW::WHILE)) token = consume(TOKEN_WHILE);
+    else if (match(KW::THIS)) token = consume(TOKEN_THIS);
+    else if (match(KW::TRUE)) token = consume(TOKEN_TRUE);
+    else if (match(KW::FALSE)) token = consume(TOKEN_FALSE);
+    else if (match(KW::I8)) token = consume(TOKEN_I8);
+    else if (match(KW::I16)) token = consume(TOKEN_I16);
+    else if (match(KW::I32)) token = consume(TOKEN_I32);
+    else if (match(KW::I64)) token = consume(TOKEN_I64);
+    else if (match(KW::CHAR)) token = consume(TOKEN_CHAR);
+    else if (match(KW::FLOAT)) token = consume(TOKEN_FLOAT);
+    else if (match(KW::DOUBLE)) token = consume(TOKEN_DOUBLE);
+    else if (match(KW::BOOL)) token = consume(TOKEN_BOOL);
+    else if (match(KW::STR)) token = consume(TOKEN_STRING);
+}
+
 Token Lexer::nextToken()
 {
     while (isWhitespace() && !isEof())
@@ -181,6 +210,7 @@ Token Lexer::nextToken()
     else if ( c == '=' && c1 == '=' ) token = consume(TOKEN_EQUAL_EQUAL, 2);
     else if ( c == '!' && c1 == '=' ) token = consume(TOKEN_BANG_EQUAL, 2);
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
+    else if ( c == '|' && c1 == '|' ) token = consume(TOKEN_PIPE_PIPE, 2);
     else if ( c == '/' && c1 == '/' ) { do { advance(); } while (peek(0) != '\n'); token = consume(TOKEN_COMMENT_SINGLE, 1); this->loc.row += 1; }
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '+') token = consume(TOKEN_PLUS, 1);
@@ -216,32 +246,7 @@ Token Lexer::nextToken()
             advance();
         }
 
-        if (match(KW::IMPORT)) token = consume(TOKEN_IMPORT);
-        else if (match(KW::MODULE)) token = consume(TOKEN_MODULE);
-        else if (match(KW::RECORD)) token = consume(TOKEN_RECORD);
-        else if (match(KW::PURE)) token = consume(TOKEN_PURE);
-        else if (match(KW::RETURN)) token = consume(TOKEN_RETURN);
-        else if (match(KW::ENTITY)) token = consume(TOKEN_ENTITY);
-        else if (match(KW::VAR)) token = consume(TOKEN_VAR);
-        else if (match(KW::ENTRY)) token = consume(TOKEN_ENTRY);
-        else if (match(KW::PROC)) token = consume(TOKEN_PROC);
-        else if (match(KW::IF)) token = consume(TOKEN_IF);
-        else if (match(KW::ELSE)) token = consume(TOKEN_ELSE);
-        else if (match(KW::FOR)) token = consume(TOKEN_FOR);
-        else if (match(KW::WHILE)) token = consume(TOKEN_WHILE);
-        else if (match(KW::THIS)) token = consume(TOKEN_THIS);
-        else if (match(KW::TRUE)) token = consume(TOKEN_TRUE);
-        else if (match(KW::FALSE)) token = consume(TOKEN_FALSE);
-        else if (match(KW::I8)) token = consume(TOKEN_I8);
-        else if (match(KW::I16)) token = consume(TOKEN_I16);
-        else if (match(KW::I32)) token = consume(TOKEN_I32);
-        else if (match(KW::I64)) token = consume(TOKEN_I64);
-        else if (match(KW::CHAR)) token = consume(TOKEN_CHAR);
-        else if (match(KW::FLOAT)) token = consume(TOKEN_FLOAT);
-        else if (match(KW::DOUBLE)) token = consume(TOKEN_DOUBLE);
-        else if (match(KW::BOOL)) token = consume(TOKEN_BOOL);
-        else if (match(KW::STR)) token = consume(TOKEN_STRING);
-        else token = consume(TOKEN_IDENTIFIER);
+        matchKeywords(token);
     }
     else if (isDigit()) 
     {

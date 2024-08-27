@@ -81,6 +81,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_MODULE";
         case TOKEN_NUM_LITERAL:
             return "TOKEN_NUM_LITERAL";
+        case TOKEN_PIPE_PIPE:
+            return "TOKEN_PIPE_PIPE";
         case TOKEN_PLUS:
             return "TOKEN_PLUS";
         case TOKEN_PROC:
