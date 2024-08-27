@@ -1,0 +1,124 @@
+
+#include  <iostream>
+
+#include "util.hh"
+
+std::string tokenKindToString(TokenKind kind)
+{
+    switch (kind)
+    {
+        case TOKEN_ARROW:
+            return "TOKEN_ARROW";
+        case TOKEN_BANG:
+            return "TOKEN_BANG";
+        case TOKEN_BANG_EQUAL:
+            return "TOKEN_BANG_EQUAL";
+        case TOKEN_BOOL:
+            return "TOKEN_BOOL";
+        case TOKEN_CHAR:
+            return "TOKEN_CHAR";
+        case TOKEN_CHAR_LITERAL:
+            return "TOKEN_CHAR_LITERAL";
+        case TOKEN_COLON:
+            return "TOKEN_COLON";
+        case TOKEN_COMMA:
+            return "TOKEN_COMMA";
+        case TOKEN_COMMENT_SINGLE:
+            return "TOKEN_COMMENT_SINGLE";
+        case TOKEN_DOT:
+            return "TOKEN_DOT";
+        case TOKEN_DOUBLE:
+            return "TOKEN_DOUBLE";
+        case TOKEN_ELSE:
+            return "TOKEN_ELSE";
+        case TOKEN_ENTITY:
+            return "TOKEN_ENTITY";
+        case TOKEN_ENTRY:
+            return "TOKEN_ENTRY";
+        case TOKEN_EOF:
+            return "TOKEN_EOF";
+        case TOKEN_EQUAL:
+            return "TOKEN_EQUAL";
+        case TOKEN_EQUAL_EQUAL:
+            return "TOKEN_EQUAL_EQUAL";
+        case TOKEN_ERROR:
+            return "TOKEN_ERROR";
+        case TOKEN_FALSE:
+            return "TOKEN_FALSE";
+        case TOKEN_FLOAT:
+            return "TOKEN_FLOAT";
+        case TOKEN_FOR:
+            return "TOKEN_FOR";
+        case TOKEN_GREATER:
+            return "TOKEN_GREATER";
+        case TOKEN_GREATER_EQUAL:
+            return "TOKEN_GREATER_EQUAL";
+        case TOKEN_I16:
+            return "TOKEN_I16";
+        case TOKEN_I32:
+            return "TOKEN_I32";
+        case TOKEN_I64:
+            return "TOKEN_I64";
+        case TOKEN_I8:
+            return "TOKEN_I8";
+        case TOKEN_IDENTIFIER:
+            return "TOKEN_IDENTIFIER";
+        case TOKEN_IF:
+            return "TOKEN_IF";
+        case TOKEN_IMPORT:
+            return "TOKEN_IMPORT";
+        case TOKEN_LEFT_BRACE:
+            return "TOKEN_LEFT_BRACE";
+        case TOKEN_LEFT_PAREN:
+            return "TOKEN_LEFT_PAREN";
+        case TOKEN_LESS:
+            return "TOKEN_LESS";
+        case TOKEN_LESS_EQUAL:
+            return "TOKEN_LESS_EQUAL";
+        case TOKEN_MINUS:
+            return "TOKEN_MINUS";
+        case TOKEN_MODULE:
+            return "TOKEN_MODULE";
+        case TOKEN_NUM_LITERAL:
+            return "TOKEN_NUM_LITERAL";
+        case TOKEN_PLUS:
+            return "TOKEN_PLUS";
+        case TOKEN_PROC:
+            return "TOKEN_PROC";
+        case TOKEN_PURE:
+            return "TOKEN_PURE";
+        case TOKEN_RECORD:
+            return "TOKEN_RECORD";
+        case TOKEN_RETURN:
+            return "TOKEN_RETURN";
+        case TOKEN_RIGHT_BRACE:
+            return "TOKEN_RIGHT_BRACE";
+        case TOKEN_RIGHT_PAREN:
+            return "TOKEN_RIGHT_PAREN";
+        case TOKEN_SEMICOLON:
+            return "TOKEN_SEMICOLON";
+        case TOKEN_SLASH:
+            return "TOKEN_SLASH";
+        case TOKEN_STAR:
+            return "TOKEN_STAR";
+        case TOKEN_STRING:
+            return "TOKEN_STRING";
+        case TOKEN_STRING_LITERAL:
+            return "TOKEN_STRING_LITERAL";
+        case TOKEN_THIS:
+            return "TOKEN_THIS";
+        case TOKEN_TRUE:
+            return "TOKEN_TRUE";
+        case TOKEN_VAR:
+            return "TOKEN_VAR";
+        case TOKEN_WHILE:
+            return "TOKEN_WHILE";
+        default:
+            return "TOKEN_UNKNOWN";
+    }
+}
+
+void prettyPrintToken(Token token) 
+{
+    std::cout << "[Token: " << tokenKindToString(token.kind) << " lexeme: " << ((token.kind != TOKEN_EOF) ? token.lexeme : "EOF") << " Pos: " << token.location.row << ":" << token.location.col << "]" << std::endl;
+}
