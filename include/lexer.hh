@@ -36,6 +36,9 @@ private:
     bool match(const char *keyword);
     void matchKeywords(Token &token);
     void eatMultilineComment(Token &token);
+    void eatSinglelineComment(Token &token);
+    void eatIdentifier(Token &token);
+    void eatNumber(Token &token);
     Token nextToken();
     void addEofToken();
 

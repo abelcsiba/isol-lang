@@ -116,6 +116,43 @@ void Lexer::eatMultilineComment(Token &token)
         token.location = saved_loc;
 }
 
+void Lexer::eatSinglelineComment(Token &token)
+{
+    do 
+    { 
+        advance(); 
+    } while (peek(0) != '\n'); 
+    token = consume(TOKEN_COMMENT_SINGLE, 1); 
+    this->loc.row += 1;
+}
+
+void Lexer::eatIdentifier(Token &token)
+{
+    token.kind = TOKEN_IDENTIFIER;
+    if (isShadower()) 
+    {
+        token.shadower = true;
+        lex_begin += 1;
+        advance();
+    }
+
+    while (isAlphaNumeric() || isShadower())
+    {
+        advance();
+    }
+
+    matchKeywords(token); 
+}
+
+void Lexer::eatNumber(Token &token)
+{
+    while (isDigit()) 
+    {
+        advance();
+    }
+    token = consume(TOKEN_NUM_LITERAL);
+}
+
 Token Lexer::consume(TokenKind kind, int offset)
 {
     adjustPos(offset);
@@ -184,6 +221,7 @@ void Lexer::matchKeywords(Token &token)
     else if (match(KW::DOUBLE)) token = consume(TOKEN_DOUBLE);
     else if (match(KW::BOOL)) token = consume(TOKEN_BOOL);
     else if (match(KW::STR)) token = consume(TOKEN_STRING);
+    else token = consume(TOKEN_IDENTIFIER);
 }
 
 Token Lexer::nextToken()
@@ -210,8 +248,7 @@ Token Lexer::nextToken()
     else if ( c == '=' && c1 == '=' ) token = consume(TOKEN_EQUAL_EQUAL, 2);
     else if ( c == '!' && c1 == '=' ) token = consume(TOKEN_BANG_EQUAL, 2);
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
-    else if ( c == '|' && c1 == '|' ) token = consume(TOKEN_PIPE_PIPE, 2);
-    else if ( c == '/' && c1 == '/' ) { do { advance(); } while (peek(0) != '\n'); token = consume(TOKEN_COMMENT_SINGLE, 1); this->loc.row += 1; }
+    else if ( c == '/' && c1 == '/' ) eatSinglelineComment(token);
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '+') token = consume(TOKEN_PLUS, 1);
     else if ( c == '-' ) token = consume(TOKEN_MINUS, 1);
@@ -231,31 +268,8 @@ Token Lexer::nextToken()
     else if ( c == '.' ) token = consume(TOKEN_DOT, 1);
     else if ( c == ':' ) token = consume(TOKEN_COLON, 1);
     else if ( c == '!' ) token = consume(TOKEN_BANG, 1);
-    else if (isAlpha() || isShadower()) 
-    {
-        token.kind = TOKEN_IDENTIFIER;
-        if (isShadower()) 
-        {
-            token.shadower = true;
-            lex_begin += 1;
-            advance();
-        }
-
-        while (isAlphaNumeric() || isShadower())
-        {
-            advance();
-        }
-
-        matchKeywords(token);
-    }
-    else if (isDigit()) 
-    {
-        while (isDigit()) 
-        {
-            advance();
-        }
-        token = consume(TOKEN_NUM_LITERAL);
-    }
+    else if (isAlpha() || isShadower()) eatIdentifier(token);
+    else if (isDigit()) eatNumber(token);
     else if (lex_curr == this->code.length()) 
     {
         token = consume(TOKEN_EOF);

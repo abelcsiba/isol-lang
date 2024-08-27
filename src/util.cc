@@ -69,6 +69,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_IMPORT";
         case TOKEN_LEFT_BRACE:
             return "TOKEN_LEFT_BRACE";
+        case TOKEN_LEFT_BRACKET:
+            return "TOKEN_LEFT_BRACKET";
         case TOKEN_LEFT_PAREN:
             return "TOKEN_LEFT_PAREN";
         case TOKEN_LESS:
@@ -77,14 +79,24 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_LESS_EQUAL";
         case TOKEN_MINUS:
             return "TOKEN_MINUS";
+        case TOKEN_MINUS_EQUAL:
+            return "TOKEN_MINUS_EQUAL";
+        case TOKEN_MINUS_MINUS:
+            return "TOKEN_MINUS_MINUS";
         case TOKEN_MODULE:
             return "TOKEN_MODULE";
+        case TOKEN_MULTI_COMMENT:
+            return "TOKEN_MULTI_COMMENT";
         case TOKEN_NUM_LITERAL:
             return "TOKEN_NUM_LITERAL";
         case TOKEN_PIPE_PIPE:
             return "TOKEN_PIPE_PIPE";
         case TOKEN_PLUS:
             return "TOKEN_PLUS";
+        case TOKEN_PLUS_EQUAL:
+            return "TOKEN_PLUS_EQUAL";
+        case TOKEN_PLUS_PLUS:
+            return "TOKEN_PLUS_PLUS";
         case TOKEN_PROC:
             return "TOKEN_PROC";
         case TOKEN_PURE:
@@ -95,14 +107,20 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_RETURN";
         case TOKEN_RIGHT_BRACE:
             return "TOKEN_RIGHT_BRACE";
+        case TOKEN_RIGHT_BRACKET:
+            return "TOKEN_RIGHT_BRACKET";
         case TOKEN_RIGHT_PAREN:
             return "TOKEN_RIGHT_PAREN";
         case TOKEN_SEMICOLON:
             return "TOKEN_SEMICOLON";
         case TOKEN_SLASH:
             return "TOKEN_SLASH";
+        case TOKEN_SLASH_EQUAL:
+            return "TOKEN_SLASH_EQUAL";
         case TOKEN_STAR:
             return "TOKEN_STAR";
+        case TOKEN_STAR_EQUAL:
+            return "TOKEN_STAR_EQUAL";
         case TOKEN_STRING:
             return "TOKEN_STRING";
         case TOKEN_STRING_LITERAL:

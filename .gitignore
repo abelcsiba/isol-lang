@@ -34,4 +34,4 @@
 # Other
 bin/
 obj/
-
+.vscode/

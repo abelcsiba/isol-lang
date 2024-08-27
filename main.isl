@@ -1,6 +1,6 @@
 
 module main; // This is a comment
-||
+
 import std; /* this is a
 
 
