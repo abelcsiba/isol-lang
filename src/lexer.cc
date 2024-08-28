@@ -246,10 +246,7 @@ Token Lexer::consume(TokenKind kind, int offset)
 bool Lexer::match(const char *keyword)
 {
     size_t lexeme_size = this->lex_curr - this->lex_begin - 1;
-    if (std::memcmp(keyword, this->code.substr(this->lex_begin, lexeme_size).data(), strlen(keyword)) == 0)
-        return true;
-
-    return false;
+    return (lexeme_size > strlen(keyword) ? false : std::memcmp(keyword, this->code.substr(this->lex_begin, lexeme_size).data(), strlen(keyword)) == 0);
 }
 
 void Lexer::matchKeywords(Token &token)

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <functional>
 
 #include "token.hh"
 #include "ast.hh"
@@ -20,6 +21,7 @@ private:
 
     // ----- Parsers -----
     bool parseModule();
+    bool parseImport();
     ASTExpression parseExpression();
 
 public:

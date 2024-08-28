@@ -44,16 +44,8 @@ bool Parser::parse()
         else if (token.kind == TOKEN_RECORD) std::cout << "Parsing record." << std::endl;
         else if (token.kind == TOKEN_ENTITY) std::cout << "Parsing entity." << std::endl;
         else if (token.kind == TOKEN_ENTRY) std::cout << "Parsing entry." << std::endl;
-        else if (token.kind == TOKEN_IMPORT) std::cout << "Parsing import." << std::endl;
-        else if (token.kind == TOKEN_MODULE) 
-        {
-            bool verdict = parseModule();
-            if (!verdict)
-            {
-                std::cout << "Incorrect module declaration!" << std::endl;
-                return false;
-            }
-        }
+        else if (token.kind == TOKEN_IMPORT) { if ( !parseImport() ) return false; /* TODO: add error logging here*/ }
+        else if (token.kind == TOKEN_MODULE) { if ( !parseModule() ) return false; /* TODO: add error logging here*/ }
         else if (token.kind == TOKEN_COMMENT_SINGLE || token.kind == TOKEN_MULTI_COMMENT) {}
         else 
         {
@@ -80,10 +72,24 @@ bool Parser::parseModule()
     {
         if (this->module->module_name.size() != 0)
         {
+            // TODO: This should be removed later, once there is error logging
             std::cout << "Module redeclaration!" << std::endl;
             return verdict;
         } 
         this->module->module_name = token.lexeme;
+        verdict = true;
+        advance(2);
+    }
+    return verdict;
+}
+
+bool Parser::parseImport()
+{
+    bool verdict = false;
+    Token token = peek(1);
+    if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek(2).kind == TOKEN_SEMICOLON)
+    {
+        this->module->dependencies.insert(token.lexeme);
         verdict = true;
         advance(2);
     }
