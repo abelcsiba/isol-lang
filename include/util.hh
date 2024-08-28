@@ -13,3 +13,5 @@ typedef struct {
 
 std::string tokenKindToString(TokenKind kind);
 void prettyPrintToken(Token token);
+
+bool isValidNumber(std::string base, const char* c);

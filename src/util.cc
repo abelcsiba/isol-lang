@@ -2,6 +2,7 @@
 #include  <iostream>
 
 #include "util.hh"
+#include <string.h>
 
 std::string tokenKindToString(TokenKind kind)
 {
@@ -143,4 +144,38 @@ std::string tokenKindToString(TokenKind kind)
 void prettyPrintToken(Token token) 
 {
     std::cout << "[Token: " << tokenKindToString(token.kind) << " lexeme: " << ((token.kind != TOKEN_EOF) ? token.lexeme : "EOF") << " Pos: " << token.location.row << ":" << token.location.col << "]" << std::endl;
+}
+
+bool isValidNumber(std::string base, const char* c)
+{
+    try
+    {
+        int b = std::stoi(base);
+        if (b > 16)
+        {
+            return false;
+        }
+        else if (b <= 10)
+        {
+            for (int i = 0; i < strlen(c); i++)
+            if (!( c[i] >= '0' && c[i] < ('0' + b)))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < strlen(c); i++)
+            if (! (( c[i] >= '0' && c[i] < ('0' + b)) || (c[i] >= 'A' && c[i] < ('A' + b - 10))))
+            {
+                return false;
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        return false;
+    }
+    
+    return true;
 }

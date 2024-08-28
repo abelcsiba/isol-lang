@@ -148,11 +148,29 @@ void Lexer::eatIdentifier(Token &token)
 
 void Lexer::eatNumber(Token &token)
 {
-    while (isDigit()) 
+    char c = peek(1);
+    char c1 = peek(2);
+    std::string base = "";
+    if ( c == '#')
+    {
+        base += peek(0);
+        advance(2);
+    }
+    else if ( c1 == '#' )
+    {
+        base = base + peek(0) + peek(1);
+        advance(3);
+    }
+    while ((base.length() == 0) ? isDigit() : isAlphaNumeric()) 
     {
         advance();
     }
     token = consume(TOKEN_NUM_LITERAL);
+    if (base.length() > 0 && !isValidNumber(base, &token.lexeme[base.length() + 2]))
+    {
+        token.kind = TOKEN_ERROR;
+        token.err = INVALID_NUM_VALUE;
+    }
 }
 
 void Lexer::eatCharLiteral(Token &token)
@@ -288,6 +306,7 @@ Token Lexer::nextToken()
     else if ( c == '!' && c1 == '=' ) token = consume(TOKEN_BANG_EQUAL, 2);
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
     else if ( c == '<' && c1 == '-' ) token = consume(TOKEN_GENERATOR, 2);
+    else if ( c == '|' && c1 == '|' ) token = consume(TOKEN_PIPE_PIPE, 2);
     else if ( c == '/' && c1 == '/' ) eatSinglelineComment(token);
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '\'') eatCharLiteral(token);
