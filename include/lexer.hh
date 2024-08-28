@@ -39,6 +39,8 @@ private:
     void eatSinglelineComment(Token &token);
     void eatIdentifier(Token &token);
     void eatNumber(Token &token);
+    void eatCharLiteral(Token &token);
+    void eatStringLiteral(Token &token);
     Token nextToken();
     void addEofToken();
 

@@ -155,6 +155,43 @@ void Lexer::eatNumber(Token &token)
     token = consume(TOKEN_NUM_LITERAL);
 }
 
+void Lexer::eatCharLiteral(Token &token)
+{
+    advance();
+    while (!isEof() && peek(0) != '\'')
+    {
+        advance();
+    }
+    
+    if (isEof())
+    {
+        token.kind = TOKEN_ERROR;
+        token.err = INVALID_CHAR_VALUE;
+    } else token = consume(TOKEN_CHAR_LITERAL, 1);
+    if (strlen(token.lexeme) > 4)
+    {
+        // TODO: Validate escape sequences properly
+        token.kind = TOKEN_ERROR;
+        token.err = INVALID_CHAR_VALUE;
+    }
+}
+
+void Lexer::eatStringLiteral(Token &token)
+{
+    advance();
+    while (!isEof() && peek(0) != '"')
+    {
+        advance();
+    }
+
+    if (isEof())
+    {
+        token.kind = TOKEN_ERROR;
+        token.err = INVALID_STRING_VALUE;
+    }
+    else token = consume(TOKEN_STRING_LITERAL, 1);
+}
+
 Token Lexer::consume(TokenKind kind, int offset)
 {
     adjustPos(offset);
@@ -253,6 +290,8 @@ Token Lexer::nextToken()
     else if ( c == '<' && c1 == '-' ) token = consume(TOKEN_GENERATOR, 2);
     else if ( c == '/' && c1 == '/' ) eatSinglelineComment(token);
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
+    else if ( c == '\'') eatCharLiteral(token);
+    else if ( c == '"') eatStringLiteral(token);
     else if ( c == '+') token = consume(TOKEN_PLUS, 1);
     else if ( c == '-' ) token = consume(TOKEN_MINUS, 1);
     else if ( c == '/' ) token = consume(TOKEN_SLASH, 1);
