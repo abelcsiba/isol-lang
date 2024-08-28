@@ -25,6 +25,11 @@ int main(int argc, char **argv)
 
 	int error = manager.loadFile(cfile, argv[1]);
 
+	if (error != 0)
+	{
+		exit(2);
+	}
+
 	Lexer *lexer = new Lexer(/*buffer*/ cfile.code, cfile);
 
 	bool verdict = lexer->lex();
@@ -36,7 +41,7 @@ int main(int argc, char **argv)
 
 	std::vector<Token> tokens = lexer->getTokens();
 
-	for (int i = 0; i < tokens.size(); i++)
+	for (size_t i = 0; i < tokens.size(); i++)
 	{
 		prettyPrintToken(tokens.at(i));	
 	}

@@ -157,7 +157,7 @@ bool isValidNumber(std::string base, const char* c)
         }
         else if (b <= 10)
         {
-            for (int i = 0; i < strlen(c); i++)
+            for (size_t i = 0; i < strlen(c); i++)
             if (!( c[i] >= '0' && c[i] < ('0' + b)))
             {
                 return false;
@@ -165,7 +165,7 @@ bool isValidNumber(std::string base, const char* c)
         }
         else
         {
-            for (int i = 0; i < strlen(c); i++)
+            for (size_t i = 0; i < strlen(c); i++)
             if (! (( c[i] >= '0' && c[i] < ('0' + b)) || (c[i] >= 'A' && c[i] < ('A' + b - 10))))
             {
                 return false;

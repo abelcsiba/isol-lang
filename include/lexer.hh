@@ -13,8 +13,8 @@
 class Lexer {
 private:
     std::string_view code;
-    int lex_begin;
-    int lex_curr;
+    size_t lex_begin;
+    size_t lex_curr;
     Location loc;
     CodeFile file;
 
