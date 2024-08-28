@@ -84,7 +84,8 @@ void Lexer::advance(int offset)
 
 const char Lexer::peek(int offset)
 {
-    if (lex_curr + offset >= this->code.length()) return '#';
+    // TODO: This is a horrible hack, fix it!
+    if (lex_curr + offset >= this->code.length()) return '$';
     return this->code.at(lex_curr + offset);
 }
 

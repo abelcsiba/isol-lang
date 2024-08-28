@@ -4,8 +4,10 @@
 #include <string>
 #include <fstream>
 #include <streambuf>
+#include <vector>
 
 #include "lexer.hh"
+#include "parser.hh"
 #include "cresult.hh"
 #include "file_manager.hh"
 
@@ -41,10 +43,14 @@ int main(int argc, char **argv)
 
 	std::vector<Token> tokens = lexer->getTokens();
 
-	for (size_t i = 0; i < tokens.size(); i++)
+	Parser *parser = new Parser(std::move(tokens));
+
+	parser->parse();
+
+	/*for (size_t i = 0; i < tokens.size(); i++)
 	{
 		prettyPrintToken(tokens.at(i));	
-	}
+	}*/
 
 	return rc;
 }
