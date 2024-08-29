@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 
 typedef enum /* TokenErrorCode */ {
@@ -24,5 +25,7 @@ typedef struct /* Token */ {
     TokenErrorCode err;
     bool shadower = false;
 } Token;
+
+using TokenList = std::vector<Token>;
 
 void newToken(Token &token, const int col, const int row, TokenKind kind, TokenErrorCode err);

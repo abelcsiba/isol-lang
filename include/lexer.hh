@@ -18,7 +18,7 @@ private:
     Location loc;
     CodeFile file;
 
-    std::vector<Token> token_list;
+    TokenList token_list;
 
     // ----- Helpers -----
     bool isEof();
@@ -47,7 +47,7 @@ private:
 public: 
     Lexer(const char* raw_code, CodeFile file);
 
-    std::vector<Token> getTokens();
+    TokenList getTokens();
 
     bool lex();    
 };

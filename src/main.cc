@@ -43,10 +43,10 @@ int main(int argc, char **argv)
 
 	std::vector<Token> tokens = lexer->getTokens();
 
-	/*for (size_t i = 0; i < tokens.size(); i++)
+	for (size_t i = 0; i < tokens.size(); i++)
 	{
 		prettyPrintToken(tokens.at(i));	
-	}*/
+	}
 
 	Parser *parser = new Parser(std::move(tokens));
 
