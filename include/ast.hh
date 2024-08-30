@@ -20,6 +20,7 @@ public:
 
 using ExprPtr = std::unique_ptr<Expr>;
 using StmtPtr = std::unique_ptr<Statement>;
+using StmtList = std::vector<std::unique_ptr<Statement>>;
 
 class NumberExpr : public Expr {
 public:
@@ -106,6 +107,23 @@ private:
     ExprPtr cond; 
     StmtPtr then; // TODO: This should be a block expression
     StmtPtr els; // TODO: This should be a block expression
+};
+
+class BlockStmt : public Statement {
+public:
+    BlockStmt(StmtList statements) : statements(std::move(statements)) {}
+    std::string print() override 
+    {
+        std::string result = "BLOCK [ ";
+        for (auto &stmt : statements)
+        {
+            result = result + stmt->print() + " ";
+        }
+        result = result + "]";
+        return result;
+    }
+private:
+    StmtList statements;
 };
 
 class ASTModule {

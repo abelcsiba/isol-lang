@@ -21,7 +21,7 @@ Parser::Parser(TokenList tokens)
     registerInfix(TOKEN_STAR, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 20);
     registerInfix(TOKEN_SLASH, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 20);
     registerInfix(TOKEN_LEFT_PAREN, [](Parser& p, ExprPtr left) { return p.parseFunctionCall(std::move(left)); }, 30);
-    registerInfix(TOKEN_LEFT_BRACE, [](Parser& p, ExprPtr left) { return p.parseIndexing(std::move(left)); }, 30);
+    registerInfix(TOKEN_LEFT_BRACKET, [](Parser& p, ExprPtr left) { return p.parseIndexing(std::move(left)); }, 30);
     registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left) { return p.parseAssignment(); }, 5);
 }
 
@@ -79,7 +79,7 @@ bool Parser::parse()
         }
         else*/ if ( TOKEN_IF == token.kind )
         {
-            consume();
+            //consume();
             StmtPtr stmt = parseIfStatement();
             std::cout << "STATEMENT: " << stmt->print() << std::endl;
         }
@@ -309,11 +309,25 @@ StmtPtr Parser::parseVarDeclaration()
 
 StmtPtr Parser::parseIfStatement()
 {
+    consume(); // Eat the IF keyword
     ExprPtr cond = parseExpression(0);
-    StmtPtr then = parseVarDeclaration();
-    consume(); // I only assume here, it is an else token... fix it!
-    StmtPtr els = parseVarDeclaration();
+    StmtPtr then = parseBlockStatement(); // TODO: Block or single stmt
+    consume(); // TODO: I only assume here, it is an else token... fix it!
+    StmtPtr els = parseBlockStatement(); // TODO: Block or single stmt
     return std::make_unique<IfStmt>(std::move(cond), std::move(then), std::move(els));
+}
+
+StmtPtr Parser::parseBlockStatement()
+{
+    consume(); // Eat the '{'
+    StmtList stmt_list;
+    do
+    {
+        StmtPtr stmt = parseVarDeclaration();
+        stmt_list.push_back(std::move(stmt));
+    } while (peek(0).kind != TOKEN_RIGHT_BRACE);
+    consume(); // Eat the '}'
+    return std::make_unique<BlockStmt>(std::move(stmt_list));
 }
 
 void Parser::registerPrefix(TokenKind kind, PrefixParseFn fn) {

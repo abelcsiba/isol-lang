@@ -40,6 +40,8 @@ private:
 
     StmtPtr parseVarDeclaration();
     StmtPtr parseIfStatement();
+    StmtPtr parseBlockStatement();
+
 
     // ----- Helpers -----
     bool isEof();
