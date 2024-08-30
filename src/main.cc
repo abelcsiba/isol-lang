@@ -50,9 +50,16 @@ int main(int argc, char **argv)
 
 	Parser *parser = new Parser(std::move(tokens));
 
-	parser->parse();
+	verdict = parser->parse();
 
+	std::cout << (verdict ? "true" : "false") << std::endl;
 
+	std::cout << "Module: " << parser->getModule()->module_name << std::endl;
+
+	for (auto dep : parser->getModule()->dependencies)
+	{
+		std:: cout << " - " << dep << std::endl;
+	}
 
 	return rc;
 }

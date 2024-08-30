@@ -65,17 +65,17 @@ bool Parser::parse()
     this->module = new ASTModule();
     while (!isEof())
     {
+        if (peek(0).kind == TOKEN_SEMICOLON)
+            std::cout << "Expression end\n";
         ExprPtr expr = parseExpression(0);
-
         if ( expr == nullptr ) 
         {
             std::cout << "Failed to parse expression!" << std::endl;
             return false;
         }
-
         std::cout << "Expression: " << expr->print() << std::endl;
         
-        /*Token token = peek(0);
+        /*Token token = advance();
 
         if (token.kind == TOKEN_PURE) std::cout << "Parsing pure func." << std::endl;
         else if (token.kind == TOKEN_RECORD) std::cout << "Parsing record." << std::endl;
@@ -104,8 +104,8 @@ ASTModule* Parser::getModule()
 bool Parser::parseModule()
 {
     bool verdict = false;
-    Token token = peek(1);
-    if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek(2).kind == TOKEN_SEMICOLON)
+    Token token = peek(0);
+    if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek().kind == TOKEN_SEMICOLON)
     {
         if (module->module_name.size() != 0)
         {
@@ -123,8 +123,8 @@ bool Parser::parseModule()
 bool Parser::parseImport()
 {
     bool verdict = false;
-    Token token = peek(1);
-    if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek(2).kind == TOKEN_SEMICOLON)
+    Token token = peek(0);
+    if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek().kind == TOKEN_SEMICOLON)
     {
         this->module->dependencies.insert(token.lexeme);
         verdict = true;
