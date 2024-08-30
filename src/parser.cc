@@ -309,21 +309,7 @@ StmtPtr Parser::parseVarDeclaration()
 
 StmtPtr Parser::parseIfStatement()
 {
-    Token token = advance();
-    if ( TOKEN_LEFT_PAREN != token.kind)
-    {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \'(\'!" << std::endl;
-        return nullptr;
-    }
     ExprPtr cond = parseExpression(0);
-    token = advance();
-    if ( TOKEN_RIGHT_PAREN != token.kind )
-    {
-        // TODO: same as above
-        std::cout << "Expected symbol \')\'!" << std::endl;
-        return nullptr;
-    }
     StmtPtr then = parseVarDeclaration();
     consume(); // I only assume here, it is an else token... fix it!
     StmtPtr els = parseVarDeclaration();
