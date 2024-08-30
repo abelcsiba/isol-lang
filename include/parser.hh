@@ -38,12 +38,16 @@ private:
     ExprPtr parseFunctionCall(ExprPtr left);
     ExprPtr parseIndexing(ExprPtr left);
 
+    StmtPtr parseVarDeclaration();
+    StmtPtr parseIfStatement();
+
     // ----- Helpers -----
     bool isEof();
     Token advance();
-    void consume(size_t offset);
+    void consume(size_t offset = 1);
     Token peek(size_t offset = 1);
     Token previous();
+    bool match(TokenKind kind);
 
     // ----- Parsers -----
     bool parseModule();

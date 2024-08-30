@@ -60,12 +60,30 @@ Token Parser::previous()
     return token_list[parse_curr - 1]; 
 }
 
+bool Parser::match(TokenKind kind)
+{
+    return peek(0).kind == kind;
+}
+
 bool Parser::parse()
 {
     this->module = new ASTModule();
     while (!isEof())
     {
-        if (peek(0).kind == TOKEN_SEMICOLON)
+        Token token = peek(0);
+
+        /*if ( TOKEN_VAR == token.kind ) 
+        {
+            StmtPtr stmt = parseVarDeclaration();
+            std::cout << "STATEMENT: " << stmt->print() << std::endl;
+        }
+        else*/ if ( TOKEN_IF == token.kind )
+        {
+            consume();
+            StmtPtr stmt = parseIfStatement();
+            std::cout << "STATEMENT: " << stmt->print() << std::endl;
+        }
+        /*if (peek(0).kind == TOKEN_SEMICOLON)
             std::cout << "Expression end\n";
         ExprPtr expr = parseExpression(0);
         if ( expr == nullptr ) 
@@ -73,7 +91,7 @@ bool Parser::parse()
             std::cout << "Failed to parse expression!" << std::endl;
             return false;
         }
-        std::cout << "Expression: " << expr->print() << std::endl;
+        std::cout << "Expression: " << expr->print() << std::endl;*/
         
         /*Token token = advance();
 
@@ -89,8 +107,8 @@ bool Parser::parse()
             // TODO: Proper logging here, please
             std::cout << "Unexpected symbol \'" << token.lexeme << "\'." << std::endl;
             return false;
-        }*/
-        //advance();
+        }
+        //advance();*/
     }
     // TODO: fix return
     return true;
@@ -206,7 +224,7 @@ ExprPtr Parser::parseGroup(Token &token)
 
 ExprPtr Parser::parseBinaryOp(ExprPtr left) 
 {
-    TokenKind op = peek(-1).kind;
+    TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op]);
     return std::make_unique<BinaryExpr>(std::move(left), op, std::move(right));
 }
@@ -241,6 +259,75 @@ ExprPtr Parser::parseIndexing(ExprPtr left) {
     }
     advance(); // consume ']'
     return std::make_unique<IndexExpr>(std::move(left), std::move(index));
+}
+
+// TODO: Parsing type should be in a different function
+StmtPtr Parser::parseVarDeclaration()
+{
+    consume(); // Eat the VAR keyword
+    Token token = advance();
+    std::string var_name, raw_type;
+    if ( TOKEN_IDENTIFIER != token.kind )
+    {
+        // TODO: Register name in scope. Also check for redeclaration + proper error handling
+        std::cout << "Expected identifier name!" << std::endl;
+        return nullptr;
+    }
+    var_name = token.lexeme;
+    token = advance();
+    if ( TOKEN_COLON != token.kind )
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \':\'!" << std::endl;
+        return nullptr;
+    }
+    token = advance();
+    if ( TOKEN_IDENTIFIER != token.kind && TOKEN_I8 != token.kind )
+    {
+        // TODO: proper error handling
+        std::cout << "Expected type identifier!" << std::endl;
+        return nullptr;
+    }
+    raw_type = token.lexeme;
+    token = advance();
+    if ( TOKEN_EQUAL != token.kind )
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \'=\'!" << std::endl;
+        return nullptr;
+    }
+    ExprPtr lhs = parseExpression(0);
+    token = advance();
+    if ( TOKEN_SEMICOLON != token.kind )
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \';\'!" << std::endl;
+        return nullptr;
+    }
+    return std::make_unique<VarDecStmt>(var_name, raw_type, std::move(lhs));
+}
+
+StmtPtr Parser::parseIfStatement()
+{
+    Token token = advance();
+    if ( TOKEN_LEFT_PAREN != token.kind)
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \'(\'!" << std::endl;
+        return nullptr;
+    }
+    ExprPtr cond = parseExpression(0);
+    token = advance();
+    if ( TOKEN_RIGHT_PAREN != token.kind )
+    {
+        // TODO: same as above
+        std::cout << "Expected symbol \')\'!" << std::endl;
+        return nullptr;
+    }
+    StmtPtr then = parseVarDeclaration();
+    consume(); // I only assume here, it is an else token... fix it!
+    StmtPtr els = parseVarDeclaration();
+    return std::make_unique<IfStmt>(std::move(cond), std::move(then), std::move(els));
 }
 
 void Parser::registerPrefix(TokenKind kind, PrefixParseFn fn) {
