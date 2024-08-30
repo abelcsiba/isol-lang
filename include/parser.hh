@@ -17,7 +17,7 @@ private:
     size_t parse_curr;
     ASTModule* module;
 
-    using PrefixParseFn = std::function<ExprPtr(Parser&)>;
+    using PrefixParseFn = std::function<ExprPtr(Parser&, Token&)>;
     using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr)>;
 
     std::unordered_map<TokenKind, PrefixParseFn> prefixParseFns;
@@ -26,19 +26,22 @@ private:
 
     void registerPrefix(TokenKind kind, PrefixParseFn fn);
     void registerInfix(TokenKind kind, InfixParseFn fn, uint8_t precedence);
+    uint8_t getPrecedence(TokenKind kind);
 
     ExprPtr parseExpression(uint8_t precedence = 0);
-    ExprPtr parseNumber();
-    ExprPtr parseIdentifier();
-    ExprPtr parseGroup();
+    ExprPtr parseNumber(Token &token);
+    ExprPtr parseIdentifier(Token &token);
+    ExprPtr parseGroup(Token &token);
     ExprPtr parseBinaryOp(ExprPtr left);
+    ExprPtr parseUnary(Token &token);
     ExprPtr parseAssignment();
     ExprPtr parseFunctionCall(ExprPtr left);
     ExprPtr parseIndexing(ExprPtr left);
 
     // ----- Helpers -----
     bool isEof();
-    void advance(size_t offset = 1);
+    Token advance();
+    void consume(size_t offset);
     Token peek(size_t offset = 1);
     Token previous();
 

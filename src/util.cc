@@ -179,3 +179,24 @@ bool isValidNumber(std::string base, const char* c)
     
     return true;
 }
+
+std::string operatorToString(TokenKind op)
+{
+    switch (op)
+    {
+    case TOKEN_PLUS:
+        return "+";
+    case TOKEN_MINUS:
+        return "-";
+    case TOKEN_STAR:
+        return "*";
+    case TOKEN_SLASH:
+        return "/";
+    case TOKEN_NUM_LITERAL:
+        return "NUM";
+    case TOKEN_IDENTIFIER:
+        return "ID";
+    default:
+        return "(null)";
+    }
+}

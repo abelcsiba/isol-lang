@@ -10,9 +10,11 @@ Parser::Parser(TokenList tokens)
     this->token_list = tokens;
     this->parse_curr = 0;
 
-    registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p) { return p.parseNumber(); });
-    registerPrefix(TOKEN_IDENTIFIER, [](Parser& p) { return p.parseIdentifier(); });
-    registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p) { return p.parseGroup(); });
+    registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
+    registerPrefix(TOKEN_IDENTIFIER, [](Parser& p, Token &prev) { return p.parseIdentifier(prev); }); 
+    registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p, Token &prev) { return p.parseGroup(prev); }); // TODO: do I need prev here?
+    registerPrefix(TOKEN_MINUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
+    registerPrefix(TOKEN_PLUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
 
     registerInfix(TOKEN_PLUS, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 10);
     registerInfix(TOKEN_MINUS, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 10);
@@ -25,12 +27,19 @@ Parser::Parser(TokenList tokens)
 
 bool Parser::isEof()
 {
-    return this->token_list.at(this->parse_curr).kind == TOKEN_EOF;
+    return token_list[this->parse_curr].kind == TOKEN_EOF;
 }
 
-void Parser::advance(size_t offset)
+Token Parser::advance()
 {
-    this->parse_curr += offset;
+    size_t current = parse_curr;
+    parse_curr++;
+    return token_list[current];
+}
+
+void Parser::consume(size_t offset)
+{
+    parse_curr += offset;
 }
 
 Token Parser::peek(size_t offset)
@@ -43,17 +52,17 @@ Token Parser::peek(size_t offset)
         token.kind = TOKEN_EOF;
         return token;
     }
-    return this->token_list.at(this->parse_curr + offset);
+    return token_list[this->parse_curr + offset];
 }
 
 Token Parser::previous()
 {
-    return token_list.at(parse_curr - 1); 
+    return token_list[parse_curr - 1]; 
 }
 
 bool Parser::parse()
 {
-    this->module = new ASTModule(); //new ASTModule();
+    this->module = new ASTModule();
     while (!isEof())
     {
         ExprPtr expr = parseExpression(0);
@@ -63,6 +72,8 @@ bool Parser::parse()
             std::cout << "Failed to parse expression!" << std::endl;
             return false;
         }
+
+        std::cout << "Expression: " << expr->print() << std::endl;
         
         /*Token token = peek(0);
 
@@ -79,7 +90,7 @@ bool Parser::parse()
             std::cout << "Unexpected symbol \'" << token.lexeme << "\'." << std::endl;
             return false;
         }*/
-        advance();
+        //advance();
     }
     // TODO: fix return
     return true;
@@ -104,7 +115,7 @@ bool Parser::parseModule()
         } 
         module->module_name = token.lexeme;
         verdict = true;
-        advance(2);
+        consume(2);
     }
     return verdict;
 }
@@ -117,35 +128,60 @@ bool Parser::parseImport()
     {
         this->module->dependencies.insert(token.lexeme);
         verdict = true;
-        advance(2);
+        consume(2);
     }
     return verdict;
 }
 
 ExprPtr Parser::parseExpression(uint8_t precedence)
 {
-    Token token = peek(0);
+    Token token = advance();
+    auto prefixIt = prefixParseFns.find(token.kind);
+    
+    if (prefixIt == prefixParseFns.end()) {
+        std::cout << "Unexpected token \'" << token.lexeme << "\'." << std::endl;
+        return nullptr;
+    }
 
-    return nullptr;
+    ExprPtr left = prefixIt->second(*this, token);
+    while (precedence < getPrecedence(peek(0).kind)) {
+        token = advance();
+        auto infixIt = infixParseFns.find(token.kind);
+        if (infixIt == infixParseFns.end()) {
+            break;
+        }
+
+        left = infixIt->second(*this, std::move(left));
+    }
+
+    return left;
 }
 
-ExprPtr Parser::parseNumber() {
+ExprPtr Parser::parseUnary(Token &token)
+{
+    TokenKind op = token.kind;
+    ExprPtr expr = parseExpression();
+    return std::make_unique<UnaryExpr>(op, std::move(expr));
+}
+
+ExprPtr Parser::parseNumber(Token &token) 
+{
     try
     {
-        int value = std::stoi(peek(0).lexeme);
+        int value = std::stoi(token.lexeme);
         return std::make_unique<NumberExpr>(value);
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        // TODO: Implement proper number parsing the remove the try/catch shit
+        std::cerr << "FAILED to parse " << token.lexeme << " " << e.what() << '\n';
     }
 
     return nullptr;
 }
 
-ExprPtr Parser::parseIdentifier() {
-    // TODO: This won't work, fix it!
-    Token token = peek(0);
+ExprPtr Parser::parseIdentifier(Token &token) 
+{
     std::string name = token.lexeme;
     if (token.kind == TOKEN_EQUAL) {
         advance();
@@ -156,24 +192,27 @@ ExprPtr Parser::parseIdentifier() {
     }
 }
 
-ExprPtr Parser::parseGroup() {
+ExprPtr Parser::parseGroup(Token &token) 
+{
     ExprPtr expr = parseExpression();
     
     if (peek(0).kind != TOKEN_RIGHT_PAREN) {
-        throw std::runtime_error("Expected ')'");
+        std::cout << "Expected ')'" << std::endl;
+        return nullptr;
     }
-    advance(); // consume ')'
+    advance(); 
     return expr;
 }
 
-ExprPtr Parser::parseBinaryOp(ExprPtr left) {
-    TokenKind op = peek(0).kind;
-    advance();
+ExprPtr Parser::parseBinaryOp(ExprPtr left) 
+{
+    TokenKind op = peek(-1).kind;
     ExprPtr right = parseExpression(precedences[op]);
     return std::make_unique<BinaryExpr>(std::move(left), op, std::move(right));
 }
 
-ExprPtr Parser::parseAssignment() {
+ExprPtr Parser::parseAssignment() 
+{
     std::string name = peek(0).lexeme;
     advance();
     ExprPtr value = parseExpression();
@@ -211,4 +250,12 @@ void Parser::registerPrefix(TokenKind kind, PrefixParseFn fn) {
 void Parser::registerInfix(TokenKind kind, InfixParseFn fn, uint8_t precedence) {
     infixParseFns[kind] = fn;
     precedences[kind] = precedence;
+}
+
+uint8_t Parser::getPrecedence(TokenKind kind) {
+    auto it = precedences.find(kind);
+    if (it != precedences.end()) {
+        return it->second;
+    }
+    return 0;
 }
