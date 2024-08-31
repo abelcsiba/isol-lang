@@ -4,6 +4,17 @@
 #include <string>
 #include <vector>
 
+typedef enum /* TypeKind */ {
+    PT_I8           = 0,
+    PT_I16          = 1,
+    PT_I32          = 2,
+    PT_I64          = 3,
+    PT_FLOAT        = 4,
+    PT_CHAR         = 5,
+    PT_STRING       = 6,
+    PT_BOOL         = 7,
+    CT_Composite    = 8,
+} TypeKind;
 
 typedef enum /* TokenErrorCode */ {
     #include "err_codes.def"
@@ -20,11 +31,16 @@ typedef struct /* Location */ {
 
 typedef struct /* Token */ {
     TokenKind kind;
-    char *lexeme;
+    char * lexeme; // TODO: replace it with std::string! It is leaking memory.
     Location location;
     TokenErrorCode err;
     bool shadower = false;
 } Token;
+
+typedef struct /* TypeInfo */ {
+    TypeKind kind;
+    std::string type_name;
+} TypeInfo;
 
 using TokenList = std::vector<Token>;
 

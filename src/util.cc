@@ -70,8 +70,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_IF";
         case TOKEN_IMPORT:
             return "TOKEN_IMPORT";
-        case TOKEN_LEFT_BRACE:
-            return "TOKEN_LEFT_BRACE";
+        case TOKEN_LEFT_CURLY:
+            return "TOKEN_LEFT_CURLY";
         case TOKEN_LEFT_BRACKET:
             return "TOKEN_LEFT_BRACKET";
         case TOKEN_LEFT_PAREN:
@@ -108,8 +108,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_RECORD";
         case TOKEN_RETURN:
             return "TOKEN_RETURN";
-        case TOKEN_RIGHT_BRACE:
-            return "TOKEN_RIGHT_BRACE";
+        case TOKEN_RIGHT_CURLY:
+            return "TOKEN_RIGHT_CURLY";
         case TOKEN_RIGHT_BRACKET:
             return "TOKEN_RIGHT_BRACKET";
         case TOKEN_RIGHT_PAREN:
@@ -155,7 +155,15 @@ bool isValidNumber(std::string base, const char* c)
         {
             return false;
         }
-        else if (b <= 10)
+        else if (b <=16 && b > 10)
+        {
+            for (size_t i = 0; i < strlen(c); i++)
+            if (! (( c[i] >= '0' && c[i] < ('0' + b)) || (c[i] >= 'A' && c[i] < ('A' + b - 10))))
+            {
+                return false;
+            }
+        }
+        else if (b <= 10 && b >= 2)
         {
             for (size_t i = 0; i < strlen(c); i++)
             if (!( c[i] >= '0' && c[i] < ('0' + b)))
@@ -165,11 +173,7 @@ bool isValidNumber(std::string base, const char* c)
         }
         else
         {
-            for (size_t i = 0; i < strlen(c); i++)
-            if (! (( c[i] >= '0' && c[i] < ('0' + b)) || (c[i] >= 'A' && c[i] < ('A' + b - 10))))
-            {
-                return false;
-            }
+            return false;
         }
     }
     catch(const std::exception& e)
@@ -199,4 +203,19 @@ std::string operatorToString(TokenKind op)
     default:
         return "(null)";
     }
+}
+
+int64_t getNumericValue(std::string num)
+{
+    auto it = num.find('#');
+    uint8_t base = 10;
+    size_t start = 0;
+    if (it != std::string::npos)
+    {
+        start = it + 1;
+        base = std::stoi(num.substr(0, it));
+    }
+    
+    // TODO: add error handling here. What if num cannot be converted?
+    return std::stoi(num.substr(start, num.length() - start), nullptr, base);
 }

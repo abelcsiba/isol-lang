@@ -126,7 +126,6 @@ void Lexer::eatSinglelineComment(Token &token)
     token = consume(TOKEN_COMMENT_SINGLE, 1); 
     this->loc.row += 1;
     this->loc.col = 0;
-    // 
 }
 
 void Lexer::eatIdentifier(Token &token)
@@ -227,6 +226,13 @@ Token Lexer::consume(TokenKind kind, int offset)
         lexeme_size = this->lex_curr - this->lex_begin;
         if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 1;
 
+        if (lexeme_size > 128) // TODO: maybe move this check somewhere else
+        {
+            token.kind = TOKEN_ERROR;
+            token.err = ID_LENGTH_OVERFLOW;
+            return token;
+        }
+
         token.lexeme = new char[lexeme_size + 1];
         std::memset(token.lexeme, '\0', lexeme_size + 1);
         this->code.copy(token.lexeme, lexeme_size, this->lex_begin);
@@ -317,8 +323,8 @@ Token Lexer::nextToken()
     else if ( c == ')' ) token = consume(TOKEN_RIGHT_PAREN, 1);
     else if ( c == '[' ) token = consume(TOKEN_LEFT_BRACKET, 1);
     else if ( c == ']' ) token = consume(TOKEN_RIGHT_BRACKET, 1);
-    else if ( c == '{' ) token = consume(TOKEN_LEFT_BRACE, 1);
-    else if ( c == '}' ) token = consume(TOKEN_RIGHT_BRACE, 1);
+    else if ( c == '{' ) token = consume(TOKEN_LEFT_CURLY, 1);
+    else if ( c == '}' ) token = consume(TOKEN_RIGHT_CURLY, 1);
     else if ( c == ',' ) token = consume(TOKEN_COMMA, 1);
     else if ( c == ';' ) token = consume(TOKEN_SEMICOLON, 1);
     else if ( c == '=' ) token = consume(TOKEN_EQUAL, 1);
@@ -334,11 +340,10 @@ Token Lexer::nextToken()
         token = consume(TOKEN_EOF);
     }
     else 
-    { 
+    {
         token = consume(TOKEN_ERROR, 1);
         token.err = UNRECOGNIZED_SYMBOL;
     }
-
     return token;
 }
 
@@ -356,6 +361,11 @@ void Lexer::addEofToken()
 bool Lexer::lex() 
 {
     bool verdict = true;
+
+    for (size_t i = 0; i < code.length(); i++)
+    {
+        printf("%ld - %c\n", i, code[i]);
+    }
 
     if (isEof()) {
         Token token;

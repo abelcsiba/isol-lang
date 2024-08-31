@@ -91,18 +91,18 @@ private:
 
 class VarDecStmt : public Statement {
 public:
-    VarDecStmt(std::string name, std::string raw_type, ExprPtr lhs) : name(name), raw_type(raw_type), lhs(std::move(lhs)) {}
-    std::string print() override { return "[" + name + " : " + raw_type + " = " + lhs->print() + "]"; }
+    VarDecStmt(std::string name, TypeInfo type, ExprPtr lhs) : name(name), type(type), lhs(std::move(lhs)) {}
+    std::string print() override { return "[" + name + " : " + type.type_name + " = " + lhs->print() + "]"; }
 private:
     std::string name;
-    std::string raw_type;
+    TypeInfo type;
     ExprPtr lhs;
 };
 
 class IfStmt : public Statement {
 public:
     IfStmt(ExprPtr cond, StmtPtr then, StmtPtr els) : cond(std::move(cond)), then(std::move(then)), els(std::move(els)) {}
-    std::string print() override { return "IF [ " + cond->print() + " ] then { " + then->print() + " } else { " + els->print() + " }"; }
+    std::string print() override { return "IF [ " + cond->print() + " ] then { " + (then != nullptr ? then->print() : "") + " } else { " + (els != nullptr ? els->print() : "") + " }"; }
 private:
     ExprPtr cond; 
     StmtPtr then; // TODO: This should be a block expression
