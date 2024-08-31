@@ -362,11 +362,6 @@ bool Lexer::lex()
 {
     bool verdict = true;
 
-    for (size_t i = 0; i < code.length(); i++)
-    {
-        printf("%ld - %c\n", i, code[i]);
-    }
-
     if (isEof()) {
         Token token;
         newToken(token, -1, -1, TOKEN_ERROR, BAD_INPUT_FILE);

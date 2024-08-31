@@ -34,7 +34,7 @@ private:
     ExprPtr parseGroup();
     ExprPtr parseBinaryOp(ExprPtr left);
     ExprPtr parseUnary(Token &token);
-    ExprPtr parseAssignment();
+    ExprPtr parseAssignment(ExprPtr left);
     ExprPtr parseFunctionCall(ExprPtr left);
     ExprPtr parseIndexing(ExprPtr left);
 

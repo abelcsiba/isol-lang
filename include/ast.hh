@@ -52,12 +52,12 @@ private:
 
 class AssignmentExpr : public Expr {
 public:
-    AssignmentExpr(std::string name, ExprPtr value)
-        : name(std::move(name)), value(std::move(value)) {}
-    std::string print() override { return "(" + name + "=" + value->print() + ")"; }
+    AssignmentExpr(ExprPtr lhs, ExprPtr rhs)
+        : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    std::string print() override { return "(" + lhs->print() + "=" + rhs->print() + ")"; }
 private:
-    std::string name;
-    ExprPtr value;
+    ExprPtr lhs;
+    ExprPtr rhs;
 };
 
 class UnaryExpr : public Expr {

@@ -12,7 +12,7 @@ Parser::Parser(TokenList tokens)
 
     registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
     registerPrefix(TOKEN_IDENTIFIER, [](Parser& p, Token &prev) { return p.parseIdentifier(prev); }); 
-    registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p, Token& /*prev*/) { return p.parseGroup(); }); // TODO: do I need prev here?
+    registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p, Token& /*prev*/) { return p.parseGroup(); });
     registerPrefix(TOKEN_MINUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
     registerPrefix(TOKEN_PLUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
 
@@ -22,7 +22,7 @@ Parser::Parser(TokenList tokens)
     registerInfix(TOKEN_SLASH, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 20);
     registerInfix(TOKEN_LEFT_PAREN, [](Parser& p, ExprPtr left) { return p.parseFunctionCall(std::move(left)); }, 30);
     registerInfix(TOKEN_LEFT_BRACKET, [](Parser& p, ExprPtr left) { return p.parseIndexing(std::move(left)); }, 30);
-    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left) { return p.parseAssignment(); }, 5);
+    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left) { return p.parseAssignment(std::move(left)); }, 5);
 }
 
 bool Parser::isEof()
@@ -75,23 +75,24 @@ bool Parser::parse()
             StmtPtr stmt = parseVarDeclaration();
             std::cout << "STATEMENT: " << stmt->print() << std::endl;
         }
-        else*/ if ( TOKEN_IF == token.kind )
+        else*/ 
+        /*if ( TOKEN_IF == token.kind )
         {
             //consume();
             StmtPtr stmt = parseIfStatement();
             if (stmt != nullptr)
                 std::cout << "STATEMENT: " << stmt->print() << std::endl;
-        }
+        }*/
 
         /*if (peek(0).kind == TOKEN_SEMICOLON)
-            std::cout << "Expression end\n";
+            std::cout << "Expression end\n";*/
         ExprPtr expr = parseExpression(0);
         if ( expr == nullptr ) 
         {
             std::cout << "Failed to parse expression!" << std::endl;
             return false;
         }
-        std::cout << "Expression: " << expr->print() << std::endl;*/
+        std::cout << "Expression: " << expr->print() << std::endl;
         
         /*Token token = advance();
 
@@ -194,6 +195,7 @@ ExprPtr Parser::parseNumber(Token &token)
     {
         // TODO: Implement proper number parsing the remove the try/catch shit
         std::cerr << "FAILED to parse " << token.lexeme << " " << e.what() << '\n';
+        exit(2);
     }
 
     return nullptr;
@@ -201,14 +203,7 @@ ExprPtr Parser::parseNumber(Token &token)
 
 ExprPtr Parser::parseIdentifier(Token &token) 
 {
-    std::string name = token.lexeme;
-    if (token.kind == TOKEN_EQUAL) {
-        advance();
-        ExprPtr value = parseExpression();
-        return std::make_unique<AssignmentExpr>(name, std::move(value));
-    } else {
-        return std::make_unique<VariableExpr>(name);
-    }
+    return std::make_unique<VariableExpr>(token.lexeme);
 }
 
 ExprPtr Parser::parseGroup() 
@@ -231,13 +226,16 @@ ExprPtr Parser::parseBinaryOp(ExprPtr left)
     return std::make_unique<BinaryExpr>(std::move(left), op, std::move(right));
 }
 
-ExprPtr Parser::parseAssignment() 
+ExprPtr Parser::parseAssignment(ExprPtr left) 
 {
     // TODO: proper implementation here
-    std::string name = peek(0).lexeme;
+    /*std::string name = peek(0).lexeme;
     advance();
     ExprPtr value = parseExpression();
-    return std::make_unique<AssignmentExpr>(name, std::move(value));
+    return std::make_unique<AssignmentExpr>(name, std::move(value));*/
+    TokenKind op = previous().kind;
+    ExprPtr right = parseExpression(precedences[op]);
+    return std::make_unique<AssignmentExpr>(std::move(left), std::move(right));
 }
 
 ExprPtr Parser::parseFunctionCall(ExprPtr left) {
@@ -322,7 +320,6 @@ StmtPtr Parser::parseVarDeclaration()
 
 StmtPtr Parser::parseIfStatement()
 {
-    std::cout << "Parsing IF stmt...\n";
     consume(); // Eat the IF keyword
     ExprPtr cond = parseExpression(0);
     StmtPtr then = parseStatement(); 
