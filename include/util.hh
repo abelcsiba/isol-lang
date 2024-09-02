@@ -17,6 +17,5 @@ void prettyPrintToken(Token token);
 bool isValidNumber(std::string base, const char* c);
 int64_t getNumericValue(std::string num);
 
-int64_t convertNumWithBase(std::string num, uint8_t base);
-
 std::string operatorToString(TokenKind op);
+

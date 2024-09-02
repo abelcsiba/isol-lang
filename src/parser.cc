@@ -16,13 +16,13 @@ Parser::Parser(TokenList tokens)
     registerPrefix(TOKEN_MINUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
     registerPrefix(TOKEN_PLUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
 
-    registerInfix(TOKEN_PLUS, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 10);
-    registerInfix(TOKEN_MINUS, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 10);
-    registerInfix(TOKEN_STAR, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 20);
-    registerInfix(TOKEN_SLASH, [](Parser& p, ExprPtr left) { return p.parseBinaryOp(std::move(left)); }, 20);
-    registerInfix(TOKEN_LEFT_PAREN, [](Parser& p, ExprPtr left) { return p.parseFunctionCall(std::move(left)); }, 30);
-    registerInfix(TOKEN_LEFT_BRACKET, [](Parser& p, ExprPtr left) { return p.parseIndexing(std::move(left)); }, 30);
-    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left) { return p.parseAssignment(std::move(left)); }, 5);
+    registerInfix(TOKEN_PLUS, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 10);
+    registerInfix(TOKEN_MINUS, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 10);
+    registerInfix(TOKEN_STAR, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 20);
+    registerInfix(TOKEN_SLASH, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 20);
+    registerInfix(TOKEN_LEFT_PAREN, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseFunctionCall(std::move(left), allowAssignment); }, 30);
+    registerInfix(TOKEN_LEFT_BRACKET, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseIndexing(std::move(left), allowAssignment); }, 30);
+    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseAssignment(std::move(left), allowAssignment); }, 5);
 }
 
 bool Parser::isEof()
@@ -76,23 +76,23 @@ bool Parser::parse()
             std::cout << "STATEMENT: " << stmt->print() << std::endl;
         }
         else*/ 
-        /*if ( TOKEN_IF == token.kind )
+        if ( TOKEN_IF == token.kind )
         {
             //consume();
             StmtPtr stmt = parseIfStatement();
             if (stmt != nullptr)
                 std::cout << "STATEMENT: " << stmt->print() << std::endl;
-        }*/
+        }
 
         /*if (peek(0).kind == TOKEN_SEMICOLON)
             std::cout << "Expression end\n";*/
-        ExprPtr expr = parseExpression(0);
+        /*ExprPtr expr = parseExpression(0);
         if ( expr == nullptr ) 
         {
             std::cout << "Failed to parse expression!" << std::endl;
             return false;
         }
-        std::cout << "Expression: " << expr->print() << std::endl;
+        std::cout << "Expression: " << expr->print() << std::endl;*/
         
         /*Token token = advance();
 
@@ -152,7 +152,7 @@ bool Parser::parseImport()
     return verdict;
 }
 
-ExprPtr Parser::parseExpression(uint8_t precedence)
+ExprPtr Parser::parseExpression(uint8_t precedence, bool allowAssignment)
 {
     Token token = advance();
     auto prefixIt = prefixParseFns.find(token.kind);
@@ -171,7 +171,7 @@ ExprPtr Parser::parseExpression(uint8_t precedence)
             break;
         }
 
-        left = infixIt->second(*this, std::move(left));
+        left = infixIt->second(*this, std::move(left), allowAssignment);
     }
 
     return left;
@@ -219,26 +219,35 @@ ExprPtr Parser::parseGroup()
     return expr;
 }
 
-ExprPtr Parser::parseBinaryOp(ExprPtr left) 
+ExprPtr Parser::parseBinaryOp(ExprPtr left, bool allowAssignment) 
 {
     TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op]);
     return std::make_unique<BinaryExpr>(std::move(left), op, std::move(right));
 }
 
-ExprPtr Parser::parseAssignment(ExprPtr left) 
+ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment) 
 {
     // TODO: proper implementation here
     /*std::string name = peek(0).lexeme;
     advance();
     ExprPtr value = parseExpression();
     return std::make_unique<AssignmentExpr>(name, std::move(value));*/
+
+    std::cout << "Assign: " << left->print() << std::endl;
+    if (!allowAssignment)
+    {
+        std::cout << "Do not allow assignment!" << std::endl;
+        std::cout << "Expr: " << left->print() << std::endl;
+        return nullptr;
+    }
     TokenKind op = previous().kind;
-    ExprPtr right = parseExpression(precedences[op]);
+    ExprPtr right = parseExpression(precedences[op], false);
+    std::cout << "Right: " << right->print() << std::endl;
     return std::make_unique<AssignmentExpr>(std::move(left), std::move(right));
 }
 
-ExprPtr Parser::parseFunctionCall(ExprPtr left) {
+ExprPtr Parser::parseFunctionCall(ExprPtr left, bool allowAssignment) {
     /*std::vector<ExprPtr> args;
     if (peek(0).kind != TOKEN_RIGHT_PAREN) {
         do {
@@ -253,7 +262,7 @@ ExprPtr Parser::parseFunctionCall(ExprPtr left) {
     return nullptr;
 }
 
-ExprPtr Parser::parseIndexing(ExprPtr left) {
+ExprPtr Parser::parseIndexing(ExprPtr left, bool allowAssignment) {
     ExprPtr index = parseExpression();
     if (peek(0).kind != TOKEN_RIGHT_BRACKET) {
         return nullptr;;
@@ -275,7 +284,30 @@ StmtPtr Parser::parseVarDeclaration()
         exit(2);
     }
     var_name = token.lexeme;
-    token = advance();
+    
+    TypeInfo type = parseTypeInfo();
+    
+    if ( !match(TOKEN_EQUAL) )
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \'=\'!" << std::endl;
+        exit(2);
+    }
+    ExprPtr rhs = parseExpression(0, false);
+    if ( !match(TOKEN_SEMICOLON) )
+    {
+        // TODO: proper error handling here, please
+        std::cout << "Expected symbol \';\'!" << std::endl;
+        exit(2);
+    }
+    
+    return std::make_unique<VarDecStmt>(var_name, type, std::move(rhs));
+}
+
+TypeInfo Parser::parseTypeInfo()
+{
+    TypeInfo type;
+    Token token = advance();
     if ( TOKEN_COLON != token.kind )
     {
         // TODO: proper error handling here, please
@@ -283,39 +315,24 @@ StmtPtr Parser::parseVarDeclaration()
         exit(2);
     }
     token = advance();
-    if ( TOKEN_IDENTIFIER != token.kind && 
-         TOKEN_I8 != token.kind && 
-         TOKEN_I16 != token.kind && 
-         TOKEN_I32 != token.kind && 
-         TOKEN_I64 != token.kind &&
-         TOKEN_FLOAT != token.kind &&
-         TOKEN_CHAR != token.kind &&
-         TOKEN_STRING != token.kind &&
-         TOKEN_BOOL != token.kind)
+    if ( !token.isOneOf(TOKEN_IDENTIFIER, 
+                        TOKEN_I8, 
+                        TOKEN_I16, 
+                        TOKEN_I32, 
+                        TOKEN_I64, 
+                        TOKEN_FLOAT, 
+                        TOKEN_CHAR, 
+                        TOKEN_STRING, 
+                        TOKEN_BOOL))
     {
         // TODO: proper error handling
         std::cout << "Expected type identifier!" << std::endl;
         exit(2);
     }
-    TypeInfo type;
+
     type.type_name = token.lexeme;
-    token = advance();
-    if ( TOKEN_EQUAL != token.kind )
-    {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \'=\'!" << std::endl;
-        exit(2);
-    }
-    ExprPtr lhs = parseExpression(0);
-    token = advance();
-    if ( TOKEN_SEMICOLON != token.kind )
-    {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \';\'!" << std::endl;
-        exit(2);
-    }
-    
-    return std::make_unique<VarDecStmt>(var_name, type, std::move(lhs));
+
+    return type;
 }
 
 StmtPtr Parser::parseIfStatement()

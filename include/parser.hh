@@ -18,7 +18,7 @@ private:
     ASTModule* module;
 
     using PrefixParseFn = std::function<ExprPtr(Parser&, Token&)>;
-    using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr)>;
+    using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr, bool)>;
 
     std::unordered_map<TokenKind, PrefixParseFn> prefixParseFns;
     std::unordered_map<TokenKind, InfixParseFn> infixParseFns;
@@ -28,20 +28,22 @@ private:
     void registerInfix(TokenKind kind, InfixParseFn fn, uint8_t precedence);
     uint8_t getPrecedence(TokenKind kind);
 
-    ExprPtr parseExpression(uint8_t precedence = 0);
+    ExprPtr parseExpression(uint8_t precedence = 0, bool allowAssignment = true);
     ExprPtr parseNumber(Token &token);
     ExprPtr parseIdentifier(Token &token);
     ExprPtr parseGroup();
-    ExprPtr parseBinaryOp(ExprPtr left);
+    ExprPtr parseBinaryOp(ExprPtr left, bool allowAssignment);
     ExprPtr parseUnary(Token &token);
-    ExprPtr parseAssignment(ExprPtr left);
-    ExprPtr parseFunctionCall(ExprPtr left);
-    ExprPtr parseIndexing(ExprPtr left);
+    ExprPtr parseAssignment(ExprPtr left, bool allowAssignment);
+    ExprPtr parseFunctionCall(ExprPtr left, bool allowAssignment);
+    ExprPtr parseIndexing(ExprPtr left, bool allowAssignment);
 
     StmtPtr parseVarDeclaration();
     StmtPtr parseIfStatement();
     StmtPtr parseBlockStatement();
     StmtPtr parseStatement();
+
+    TypeInfo parseTypeInfo();
 
 
     // ----- Helpers -----

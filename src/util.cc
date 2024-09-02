@@ -219,3 +219,4 @@ int64_t getNumericValue(std::string num)
     // TODO: add error handling here. What if num cannot be converted?
     return std::stoi(num.substr(start, num.length() - start), nullptr, base);
 }
+

@@ -35,6 +35,12 @@ typedef struct /* Token */ {
     Location location;
     TokenErrorCode err;
     bool shadower = false;
+
+    bool is(TokenKind k) { return kind == k; }
+    bool isOneOf(TokenKind k1, TokenKind k2) { return is(k1) || is(k2); }
+
+    template <typename... Ts>
+    bool isOneOf(TokenKind k1, TokenKind k2, Ts... ks) { return is(k1) || isOneOf(k2, ks...); }
 } Token;
 
 typedef struct /* TypeInfo */ {
