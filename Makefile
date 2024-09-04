@@ -12,7 +12,7 @@ SOURCE_FILES=$(wildcard $(SRC_DIR)/*.cc)
 OBJECT_FILES=$(SOURCE_FILES:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
 
 CPPFLAGS=-I$(INCLUDE_DIR) 
-CFLAGS=-std=c++23 -Wall
+CFLAGS=-std=c++23 -Wall -Wextra
 
 LDFLAGS=-I$(INCLUDE_DIR)
 

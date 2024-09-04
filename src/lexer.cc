@@ -82,7 +82,7 @@ void Lexer::advance(int offset)
     this->lex_curr += offset;
 }
 
-const char Lexer::peek(int offset)
+char Lexer::peek(int offset)
 {
     // TODO: This is a horrible hack, fix it!
     if (lex_curr + offset >= this->code.length()) return '$';
@@ -141,6 +141,13 @@ void Lexer::eatIdentifier(Token &token)
     while (isAlphaNumeric() || isShadower())
     {
         advance();
+    }
+
+    if ( (lex_curr - lex_begin) > 128 ) // TODO: maybe move this check somewhere else
+    {
+        token.kind = TOKEN_ERROR;
+        token.err = ID_LENGTH_OVERFLOW;
+        return;
     }
 
     matchKeywords(token); 
@@ -225,13 +232,6 @@ Token Lexer::consume(TokenKind kind, int offset)
     {
         lexeme_size = this->lex_curr - this->lex_begin;
         if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 1;
-
-        if (lexeme_size > 128) // TODO: maybe move this check somewhere else
-        {
-            token.kind = TOKEN_ERROR;
-            token.err = ID_LENGTH_OVERFLOW;
-            return token;
-        }
 
         token.lexeme = new char[lexeme_size + 1];
         std::memset(token.lexeme, '\0', lexeme_size + 1);

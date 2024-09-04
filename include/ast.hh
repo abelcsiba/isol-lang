@@ -30,6 +30,22 @@ private:
     int value;
 };
 
+class StringExpr : public Expr {
+public:
+    StringExpr(const char* s) : str(s) {} 
+    std::string print() override { return "(\"" + str + "\")"; }
+private:
+    std::string str;
+};
+
+class CharExpr : public Expr {
+public:
+    CharExpr(const char c) : ch(c) {}
+    std::string print() override { return "(\'" + std::to_string(ch) + "\')"; } 
+private:
+    char ch;
+};
+
 class VariableExpr : public Expr {
 public:
     VariableExpr(std::string name) : name(std::move(name)) {}
@@ -130,4 +146,5 @@ class ASTModule {
 public:
     std::string module_name;
     std::set<std::string> dependencies;
+    StmtPtr entry;
 };

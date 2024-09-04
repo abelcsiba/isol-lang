@@ -30,6 +30,8 @@ private:
 
     ExprPtr parseExpression(uint8_t precedence = 0, bool allowAssignment = true);
     ExprPtr parseNumber(Token &token);
+    ExprPtr parseString(Token &token);
+    ExprPtr parseChar(Token &token);
     ExprPtr parseIdentifier(Token &token);
     ExprPtr parseGroup();
     ExprPtr parseBinaryOp(ExprPtr left, bool allowAssignment);
@@ -42,6 +44,7 @@ private:
     StmtPtr parseIfStatement();
     StmtPtr parseBlockStatement();
     StmtPtr parseStatement();
+    StmtPtr parseEntry();
 
     TypeInfo parseTypeInfo();
 

@@ -31,7 +31,7 @@ private:
     // ----- Tokenizers -----
     void advance(int offset = 1);
     bool adjustPos(int offset = 1);
-    const char peek(int offset = 1);
+    char peek(int offset = 1);
     Token consume(TokenKind kind, int offset = 0);
     bool match(const char *keyword);
     void matchKeywords(Token &token);

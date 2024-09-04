@@ -11,6 +11,8 @@ Parser::Parser(TokenList tokens)
     this->parse_curr = 0;
 
     registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
+    registerPrefix(TOKEN_STRING_LITERAL, [](Parser& p, Token &prev) { return p.parseString(prev); });
+    registerPrefix(TOKEN_CHAR_LITERAL, [](Parser &p, Token &prev) { return p.parseChar(prev); });
     registerPrefix(TOKEN_IDENTIFIER, [](Parser& p, Token &prev) { return p.parseIdentifier(prev); }); 
     registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p, Token& /*prev*/) { return p.parseGroup(); });
     registerPrefix(TOKEN_MINUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
@@ -68,7 +70,7 @@ bool Parser::parse()
     this->module = new ASTModule();
     while (!isEof())
     {
-        Token token = peek(0);
+        //Token token = peek(0);
 
         /*if ( TOKEN_VAR == token.kind ) 
         {
@@ -76,13 +78,13 @@ bool Parser::parse()
             std::cout << "STATEMENT: " << stmt->print() << std::endl;
         }
         else*/ 
-        if ( TOKEN_IF == token.kind )
+        /*if ( TOKEN_IF == token.kind )
         {
             //consume();
             StmtPtr stmt = parseIfStatement();
             if (stmt != nullptr)
                 std::cout << "STATEMENT: " << stmt->print() << std::endl;
-        }
+        }*/
 
         /*if (peek(0).kind == TOKEN_SEMICOLON)
             std::cout << "Expression end\n";*/
@@ -94,14 +96,14 @@ bool Parser::parse()
         }
         std::cout << "Expression: " << expr->print() << std::endl;*/
         
-        /*Token token = advance();
+        Token token = peek(0);
 
         if (token.kind == TOKEN_PURE) std::cout << "Parsing pure func." << std::endl;
         else if (token.kind == TOKEN_RECORD) std::cout << "Parsing record." << std::endl;
         else if (token.kind == TOKEN_ENTITY) std::cout << "Parsing entity." << std::endl;
-        else if (token.kind == TOKEN_ENTRY) std::cout << "Parsing entry." << std::endl;
-        else if (token.kind == TOKEN_IMPORT) { if ( !parseImport() ) return false;  } // TODO: add error logging here
-        else if (token.kind == TOKEN_MODULE) { if ( !parseModule() ) return false; } // TODO: add error logging here
+        else if (token.kind == TOKEN_ENTRY) { std::cout << "Entry" << std::endl; this->module->entry = parseEntry(); if (!this->module->entry) return false; }
+        else if (token.kind == TOKEN_IMPORT) { std::cout << "Import" << std::endl; if ( !parseImport() ) return false;  } // TODO: add error logging here
+        else if (token.kind == TOKEN_MODULE) { std::cout << "Module" << std::endl; if ( !parseModule() ) return false; } // TODO: add error logging here
         else if (token.kind == TOKEN_COMMENT_SINGLE || token.kind == TOKEN_MULTI_COMMENT) {}
         else 
         {
@@ -109,7 +111,6 @@ bool Parser::parse()
             std::cout << "Unexpected symbol \'" << token.lexeme << "\'." << std::endl;
             return false;
         }
-        //advance();*/
     }
     // TODO: fix return
     return true;
@@ -123,7 +124,9 @@ ASTModule* Parser::getModule()
 bool Parser::parseModule()
 {
     bool verdict = false;
+    consume();
     Token token = peek(0);
+
     if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek().kind == TOKEN_SEMICOLON)
     {
         if (module->module_name.size() != 0)
@@ -201,6 +204,39 @@ ExprPtr Parser::parseNumber(Token &token)
     return nullptr;
 }
 
+ExprPtr Parser::parseString(Token &token)
+{
+    std::string value = token.lexeme;
+    // TODO: simplify it when lexeme was changed to string
+    if (value.length() == 2) 
+    {
+        value = "";
+    }
+    else
+    {
+        value = value.substr(1, value.length() - 2);
+    }
+    std::cout << "String value: " << value << std::endl;
+    return std::make_unique<StringExpr>(value.c_str());
+}
+
+ExprPtr Parser::parseChar(Token &token)
+{
+    std::string value = token.lexeme;
+    // TODO: simplify it when lexeme was chamged to string
+    if (value.length() < 3) 
+    {
+        std::cout << "Invalid char!" << std::endl;
+        exit(2);
+    }
+    else{
+        value = value.substr(1, value.length() - 2);
+    }
+    std::cout << "Char value: " << value << std::endl;
+    // TODO: parse the above properly + account for escape sequences
+    return std::make_unique<CharExpr>(value.c_str()[0]);
+}
+
 ExprPtr Parser::parseIdentifier(Token &token) 
 {
     return std::make_unique<VariableExpr>(token.lexeme);
@@ -219,7 +255,7 @@ ExprPtr Parser::parseGroup()
     return expr;
 }
 
-ExprPtr Parser::parseBinaryOp(ExprPtr left, bool allowAssignment) 
+ExprPtr Parser::parseBinaryOp(ExprPtr left, bool /*allowAssignment*/) 
 {
     TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op]);
@@ -247,27 +283,17 @@ ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment)
     return std::make_unique<AssignmentExpr>(std::move(left), std::move(right));
 }
 
-ExprPtr Parser::parseFunctionCall(ExprPtr left, bool allowAssignment) {
-    /*std::vector<ExprPtr> args;
-    if (peek(0).kind != TOKEN_RIGHT_PAREN) {
-        do {
-            args.push_back(parseExpression());
-        } while (match(TokenType::COMMA) && advance().type != TokenType::RPAREN);
-    }
-    if (peek(0) != TOKEN_RIGHT_PAREN) {
-        return nullptr;
-    }
-    advance(); // consume ')'
-    return std::make_unique<FunctionCallExpr>(static_cast<VariableExpr*>(left.get())->getName(), std::move(args));*/
+ExprPtr Parser::parseFunctionCall(ExprPtr /*left*/, bool /*allowAssignment*/) {
+    // TODO: implement function call node
     return nullptr;
 }
 
-ExprPtr Parser::parseIndexing(ExprPtr left, bool allowAssignment) {
-    ExprPtr index = parseExpression();
+ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
+    ExprPtr index = parseExpression(false);
     if (peek(0).kind != TOKEN_RIGHT_BRACKET) {
         return nullptr;;
     }
-    advance(); // consume ']'
+    consume(); // eat ']'
     return std::make_unique<IndexExpr>(std::move(left), std::move(index));
 }
 
@@ -355,7 +381,7 @@ StmtPtr Parser::parseBlockStatement()
 
     do
     {
-        StmtPtr stmt = parseVarDeclaration();
+        StmtPtr stmt = parseStatement();
         stmt_list.push_back(std::move(stmt));
     } while (peek(0).kind != TOKEN_RIGHT_CURLY);
 
@@ -372,11 +398,22 @@ StmtPtr Parser::parseStatement()
             return parseBlockStatement();
         case TOKEN_VAR:
             return parseVarDeclaration();
+        case TOKEN_IF:
+            return parseIfStatement();
         default:
 
             std::cout << "Error parsing statements!" << std::endl;
             return nullptr;
     }
+}
+
+StmtPtr Parser::parseEntry()
+{
+    consume(); // Eat the entry keyword
+    std::cout << "Parsing entry..." << std::endl;
+    StmtPtr body = parseBlockStatement();
+    std::cout << "Entry: " << body->print() << std::endl;
+    return body;
 }
 
 void Parser::registerPrefix(TokenKind kind, PrefixParseFn fn) {
