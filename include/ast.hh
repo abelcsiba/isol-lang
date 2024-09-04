@@ -41,7 +41,7 @@ private:
 class CharExpr : public Expr {
 public:
     CharExpr(const char c) : ch(c) {}
-    std::string print() override { return "(\'" + std::to_string(ch) + "\')"; } 
+    std::string print() override { return static_cast<std::string>("(\'") + (ch) + "\')"; } 
 private:
     char ch;
 };

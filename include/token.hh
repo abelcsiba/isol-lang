@@ -31,7 +31,7 @@ typedef struct /* Location */ {
 
 typedef struct /* Token */ {
     TokenKind kind;
-    char * lexeme; // TODO: replace it with std::string! It is leaking memory.
+    std::string lexeme; // TODO: replace it with std::string! It is leaking memory.
     Location location;
     TokenErrorCode err;
     bool shadower = false;

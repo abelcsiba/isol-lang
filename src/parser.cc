@@ -206,35 +206,25 @@ ExprPtr Parser::parseNumber(Token &token)
 
 ExprPtr Parser::parseString(Token &token)
 {
-    std::string value = token.lexeme;
-    // TODO: simplify it when lexeme was changed to string
-    if (value.length() == 2) 
-    {
-        value = "";
-    }
-    else
-    {
-        value = value.substr(1, value.length() - 2);
-    }
-    std::cout << "String value: " << value << std::endl;
-    return std::make_unique<StringExpr>(value.c_str());
+    std::string value = "";
+
+    if (token.lexeme.length() == 2) token.lexeme = "";
+    else value = value.substr(1, value.length() - 2);
+
+    return std::make_unique<StringExpr>(parseEscapeSequences(value).c_str());
 }
 
 ExprPtr Parser::parseChar(Token &token)
 {
-    std::string value = token.lexeme;
-    // TODO: simplify it when lexeme was chamged to string
-    if (value.length() < 3) 
+    std::string value ;
+    if (token.lexeme.length() != 3 && token.lexeme.length() != 4) 
     {
         std::cout << "Invalid char!" << std::endl;
         exit(2);
     }
-    else{
-        value = value.substr(1, value.length() - 2);
-    }
-    std::cout << "Char value: " << value << std::endl;
-    // TODO: parse the above properly + account for escape sequences
-    return std::make_unique<CharExpr>(value.c_str()[0]);
+    else value = token.lexeme.substr(1, token.lexeme.length() - 2);
+    
+    return std::make_unique<CharExpr>(parseEscapeSequences(value).c_str()[0]);
 }
 
 ExprPtr Parser::parseIdentifier(Token &token) 

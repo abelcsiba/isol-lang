@@ -193,7 +193,7 @@ void Lexer::eatCharLiteral(Token &token)
         token.kind = TOKEN_ERROR;
         token.err = INVALID_CHAR_VALUE;
     } else token = consume(TOKEN_CHAR_LITERAL, 1);
-    if (strlen(token.lexeme) > 4)
+    if (token.lexeme.length() > 4)
     {
         // TODO: Validate escape sequences properly
         token.kind = TOKEN_ERROR;
@@ -224,18 +224,14 @@ Token Lexer::consume(TokenKind kind, int offset)
     size_t lexeme_size = 0;
     if (lex_curr == this->code.length())
     {
-        token.lexeme = new char[1];
-        lexeme_size = 0;
-        std::memset(token.lexeme, '\0', 1);
+        token.lexeme = "\0";
     }
     else
     {
         lexeme_size = this->lex_curr - this->lex_begin;
         if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 1;
 
-        token.lexeme = new char[lexeme_size + 1];
-        std::memset(token.lexeme, '\0', lexeme_size + 1);
-        this->code.copy(token.lexeme, lexeme_size, this->lex_begin);
+        token.lexeme = this->code.substr(this->lex_begin, lexeme_size);
     }
     //std::cout << "Consume: " << lex_curr << " " << lex_begin << " lexeme: " << token.lexeme << std::endl;
     Location token_location;

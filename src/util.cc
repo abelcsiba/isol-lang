@@ -220,3 +220,25 @@ int64_t getNumericValue(std::string num)
     return std::stoi(num.substr(start, num.length() - start), nullptr, base);
 }
 
+std::string parseEscapeSequences(std::string_view data)
+{
+    std::string value = "";
+    char c, c1;
+    for (size_t i = 0; i < data.length() - 1; i++)
+    {
+        c = data[i];
+        c1 = data[i + 1];
+        if (c == '\\')
+        {
+            if (c1 == 'n') value += '\n';
+            else if (c1 == 't') value += '\t';
+            else if (c1 == 'r') value += '\r';
+            else if (c1 == '\\') value += '\\';
+            else if (c1 == '\'') value += '\'';
+            else if (c1 == '\"') value += '\"';
+            else value += c;
+        } else value += c;
+    }
+    return value;
+}
+
