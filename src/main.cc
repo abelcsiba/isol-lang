@@ -6,7 +6,7 @@
 #include <streambuf>
 #include <vector>
 #include <format>
-#include <ctime>
+#include <chrono>
 
 #include "lexer.hh"
 #include "parser.hh"
@@ -14,13 +14,17 @@
 #include "file_manager.hh"
 #include "diagnostics.hh"
 
-constexpr char COMPILATION_OK[] = "\n\n{0}Compilation finished {1}successfully{2} ({3}s){4}";
-constexpr char COMPILATION_ERROR[] = "\n\n{0}Compilation exited {1}abnormally{2} ({3}s){4}";
+constexpr char COMPILATION_OK[] = "\n\n{0}Compilation finished {1}successfully{2} ({3}){4}";
+constexpr char COMPILATION_ERROR[] = "\n\n{0}Compilation exited {1}abnormally{2} ({3}){4}";
+
+typedef std::chrono::high_resolution_clock Time;
+typedef std::chrono::milliseconds ms;
+typedef std::chrono::duration<float> fsec;
 
 int main(int argc, char **argv)
 {
-	const clock_t begin_time = clock();
-	float duration = 0.0;
+	auto begin_time = Time::now();
+	fsec duration;
 	CResult rc = SUCCESS;
 
 	if (argc < 2)
@@ -55,8 +59,9 @@ int main(int argc, char **argv)
 
 	if (!verdict) 
 	{
-		duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
-		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, duration, RESET) << std::endl;
+		//duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
+		duration = Time::now() - begin_time;
+		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
 		exit(2);
 	}
 
@@ -70,8 +75,16 @@ int main(int argc, char **argv)
 
 	verdict = parser->parse();
 
-	duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
-	std::cout << std::format(COMPILATION_OK, WHITE, GREEN, WHITE, duration, RESET) << std::endl;
+	if (!verdict) 
+	{
+		//duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
+		duration = Time::now() - begin_time;
+		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+		exit(2);
+	}
+
+	duration = Time::now() - begin_time;
+	std::cout << std::format(COMPILATION_OK, WHITE, GREEN, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
 
 	return rc;
 }

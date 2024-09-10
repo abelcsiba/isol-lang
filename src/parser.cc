@@ -181,7 +181,7 @@ ExprPtr Parser::parseUnary(Token &token)
 {
     TokenKind op = token.kind;
     ExprPtr expr = parseExpression();
-    return std::make_unique<UnaryExpr>(op, std::move(expr));
+    return std::make_shared<UnaryExpr>(op, std::move(expr));
 }
 
 ExprPtr Parser::parseNumber(Token &token) 
@@ -189,7 +189,7 @@ ExprPtr Parser::parseNumber(Token &token)
     try
     {
         int value = getNumericValue(token.lexeme);
-        return std::make_unique<NumberExpr>(value);
+        return std::make_shared<NumberExpr>(value);
     }
     catch(const std::exception& e)
     {
@@ -208,7 +208,7 @@ ExprPtr Parser::parseString(Token &token)
     if (token.lexeme.length() == 2) token.lexeme = "";
     else value = value.substr(1, value.length() - 2);
 
-    return std::make_unique<StringExpr>(parseEscapeSequences(value).c_str());
+    return std::make_shared<StringExpr>(parseEscapeSequences(value).c_str());
 }
 
 ExprPtr Parser::parseChar(Token &token)
@@ -222,12 +222,12 @@ ExprPtr Parser::parseChar(Token &token)
     }
     else value = token.lexeme.substr(1, token.lexeme.length() - 2);
     
-    return std::make_unique<CharExpr>(parseEscapeSequences(value).c_str()[0]);
+    return std::make_shared<CharExpr>(parseEscapeSequences(value).c_str()[0]);
 }
 
 ExprPtr Parser::parseIdentifier(Token &token) 
 {
-    return std::make_unique<VariableExpr>(token.lexeme);
+    return std::make_shared<VariableExpr>(token.lexeme);
 }
 
 ExprPtr Parser::parseGroup() 
@@ -247,7 +247,7 @@ ExprPtr Parser::parseBinaryOp(ExprPtr left, bool /*allowAssignment*/)
 {
     TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op]);
-    return std::make_unique<BinaryExpr>(std::move(left), op, std::move(right));
+    return std::make_shared<BinaryExpr>(std::move(left), op, std::move(right));
 }
 
 ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment) 
@@ -260,8 +260,7 @@ ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment)
     }
     TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op], false);
-    std::cout << "Right: " << right->print() << std::endl;
-    return std::make_unique<AssignmentExpr>(std::move(left), std::move(right));
+    return std::make_shared<AssignmentExpr>(std::move(left), std::move(right));
 }
 
 ExprPtr Parser::parseFunctionCall(ExprPtr /*left*/, bool /*allowAssignment*/) {
@@ -273,7 +272,7 @@ ExprPtr Parser::parseInvocation(ExprPtr left, bool allowAssignment)
 {
     TokenKind op = previous().kind;
     ExprPtr right = parseExpression(precedences[op], allowAssignment);
-    return std::make_unique<InvocationExpr>(std::move(left), std::move(right));
+    return std::make_shared<InvocationExpr>(std::move(left), std::move(right));
 }
 
 ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
@@ -282,7 +281,7 @@ ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
         return nullptr;;
     }
     consume(); // eat ']'
-    return std::make_unique<IndexExpr>(std::move(left), std::move(index));
+    return std::make_shared<IndexExpr>(std::move(left), std::move(index));
 }
 
 StmtPtr Parser::parseVarDeclaration()
@@ -314,7 +313,7 @@ StmtPtr Parser::parseVarDeclaration()
         exit(2);
     }
     
-    return std::make_unique<VarDecStmt>(var_name, type, std::move(rhs));
+    return std::make_shared<VarDecStmt>(var_name, type, std::move(rhs));
 }
 
 TypeInfo Parser::parseTypeInfo()
@@ -355,10 +354,10 @@ StmtPtr Parser::parseIfStatement()
     StmtPtr then = parseStatement(); 
 
     if (!match(TOKEN_ELSE)) 
-        return std::make_unique<IfStmt>(std::move(cond), std::move(then), nullptr);
+        return std::make_shared<IfStmt>(std::move(cond), std::move(then), nullptr);
 
     StmtPtr els = parseStatement();
-    return std::make_unique<IfStmt>(std::move(cond), std::move(then), std::move(els));
+    return std::make_shared<IfStmt>(std::move(cond), std::move(then), std::move(els));
 }
 
 StmtPtr Parser::parseBlockStatement()
@@ -373,7 +372,7 @@ StmtPtr Parser::parseBlockStatement()
     } while (peek(0).kind != TOKEN_RIGHT_CURLY);
 
     consume(); // Eat the '}'
-    return std::make_unique<BlockStmt>(std::move(stmt_list));
+    return std::make_shared<BlockStmt>(std::move(stmt_list));
 }
 
 StmtPtr Parser::parseStatement()

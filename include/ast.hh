@@ -18,9 +18,9 @@ public:
     virtual std::string print() = 0;
 };
 
-using ExprPtr = std::unique_ptr<Expr>;
-using StmtPtr = std::unique_ptr<Statement>;
-using StmtList = std::vector<std::unique_ptr<Statement>>;
+using ExprPtr = std::shared_ptr<Expr>;
+using StmtPtr = std::shared_ptr<Statement>;
+using StmtList = std::vector<std::shared_ptr<Statement>>;
 
 class NumberExpr : public Expr {
 public:
