@@ -23,7 +23,7 @@ private:
     // ----- Helpers -----
     bool isEof();
     bool isWhitespace();
-    bool isDigit();
+    bool isDigit(size_t offset = 0);
     bool isShadower();
     bool isAlpha();
     bool isAlphaNumeric();

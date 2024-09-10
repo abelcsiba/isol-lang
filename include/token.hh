@@ -29,9 +29,21 @@ typedef struct /* Location */ {
     int row;
 } Location;
 
+typedef struct /* CustomValue */ {
+    std::string value_name;
+} CustomValue;
+
+typedef struct /* Message */ {
+    std::string file;
+    //std::string_view chunk; TODO: add code line for diagnostics logging
+    Location loc;
+    std::string msg;
+    std::string other_info;
+} Message;
+
 typedef struct /* Token */ {
     TokenKind kind;
-    std::string lexeme; // TODO: replace it with std::string! It is leaking memory.
+    std::string lexeme; 
     Location location;
     TokenErrorCode err;
     bool shadower = false;

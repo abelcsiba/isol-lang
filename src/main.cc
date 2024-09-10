@@ -5,15 +5,22 @@
 #include <fstream>
 #include <streambuf>
 #include <vector>
+#include <format>
+#include <ctime>
 
 #include "lexer.hh"
 #include "parser.hh"
 #include "cresult.hh"
 #include "file_manager.hh"
+#include "diagnostics.hh"
 
+constexpr char COMPILATION_OK[] = "\n\n{0}Compilation finished {1}successfully{2} ({3}s){4}";
+constexpr char COMPILATION_ERROR[] = "\n\n{0}Compilation exited {1}abnormally{2} ({3}s){4}";
 
 int main(int argc, char **argv)
 {
+	const clock_t begin_time = clock();
+	float duration = 0.0;
 	CResult rc = SUCCESS;
 
 	if (argc < 2)
@@ -22,8 +29,18 @@ int main(int argc, char **argv)
 		return CResult::ERROR;
 	}
 
+	std::string flag = "print";
+
+	if (argc >=3)
+	{
+		flag = argv[2];
+	}
+
 	CodeFile cfile;
 	FileManager manager;
+	Diagnostics diagnostics{"", LogLevel::INFO};
+
+	//diagnostics.warning({ .file = "main.cc", .loc = { .col = 2, .row = 3}, .msg = "This is a warning.", .other_info = "Eat shit and die"} );
 
 	int error = manager.loadFile(cfile, argv[1]);
 
@@ -38,28 +55,23 @@ int main(int argc, char **argv)
 
 	if (!verdict) 
 	{
-
+		duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
+		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, duration, RESET) << std::endl;
+		exit(2);
 	}
 
 	std::vector<Token> tokens = lexer->getTokens();
 
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		prettyPrintToken(tokens.at(i));	
-	}
+	if (flag == "print")
+		for (size_t i = 0; i < tokens.size(); i++)
+			prettyPrintToken(tokens.at(i));
 
-	Parser *parser = new Parser(std::move(tokens));
+	Parser *parser = new Parser(cfile.name, std::move(tokens));
 
 	verdict = parser->parse();
 
-	std::cout << (verdict ? "true" : "false") << std::endl;
-
-	std::cout << "Module: " << parser->getModule()->module_name << std::endl;
-
-	for (auto dep : parser->getModule()->dependencies)
-	{
-		std:: cout << " - " << dep << std::endl;
-	}
+	duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
+	std::cout << std::format(COMPILATION_OK, WHITE, GREEN, WHITE, duration, RESET) << std::endl;
 
 	return rc;
 }

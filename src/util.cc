@@ -200,6 +200,8 @@ std::string operatorToString(TokenKind op)
         return "NUM";
     case TOKEN_IDENTIFIER:
         return "ID";
+    case TOKEN_AND:
+        return "&";
     default:
         return "(null)";
     }

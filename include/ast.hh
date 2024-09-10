@@ -76,6 +76,16 @@ private:
     ExprPtr rhs;
 };
 
+class InvocationExpr : public Expr {
+public:
+    InvocationExpr(ExprPtr lhs, ExprPtr rhs)
+        : caller(std::move(lhs)), callee(std::move(rhs)) {}
+    std::string print() override { return "|" + caller->print() + "." + callee->print() + "|"; }
+private:
+    ExprPtr caller;
+    ExprPtr callee;
+};
+
 class UnaryExpr : public Expr {
 public:
     UnaryExpr(TokenKind op, ExprPtr expr) : op(op), expr(std::move(expr)) {}
@@ -121,8 +131,8 @@ public:
     std::string print() override { return "IF [ " + cond->print() + " ] then { " + (then != nullptr ? then->print() : "") + " } else { " + (els != nullptr ? els->print() : "") + " }"; }
 private:
     ExprPtr cond; 
-    StmtPtr then; // TODO: This should be a block expression
-    StmtPtr els; // TODO: This should be a block expression
+    StmtPtr then;
+    StmtPtr els;
 };
 
 class BlockStmt : public Statement {

@@ -29,9 +29,9 @@ bool Lexer::isWhitespace()
     return ( cur == '\n' || cur == '\r' || cur == '\t' || cur == ' ' );
 }
 
-bool Lexer::isDigit()
+bool Lexer::isDigit(size_t offset)
 {
-    if (lex_curr >= this->code.length()) return false;
+    if ( (lex_curr + offset) >= this->code.length()) return false;
     char cur = this->code.at(lex_curr);
     return ( cur >= '0' && cur <= '9' );
 }
@@ -155,15 +155,17 @@ void Lexer::eatIdentifier(Token &token)
 
 void Lexer::eatNumber(Token &token)
 {
+    // TODO: add support for floating point numnbers
     char c = peek(1);
     char c1 = peek(2);
     std::string base = "";
+
     if ( c == '#')
     {
         base += peek(0);
         advance(2);
     }
-    else if ( c1 == '#' )
+    else if ( c1 == '#')
     {
         base = base + peek(0) + peek(1);
         advance(3);
@@ -329,6 +331,7 @@ Token Lexer::nextToken()
     else if ( c == '.' ) token = consume(TOKEN_DOT, 1);
     else if ( c == ':' ) token = consume(TOKEN_COLON, 1);
     else if ( c == '!' ) token = consume(TOKEN_BANG, 1);
+    else if ( c == '&' ) token = consume(TOKEN_AND, 1);
     else if (isAlpha() || isShadower()) eatIdentifier(token);
     else if (isDigit()) eatNumber(token);
     else if (lex_curr == this->code.length()) 

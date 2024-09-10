@@ -5,10 +5,11 @@
 #include "parser.hh"
 
 
-Parser::Parser(TokenList tokens)
+Parser::Parser(std::string file, TokenList tokens)
 {
     this->token_list = tokens;
     this->parse_curr = 0;
+    this->source_file = file;
 
     registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
     registerPrefix(TOKEN_STRING_LITERAL, [](Parser& p, Token &prev) { return p.parseString(prev); });
@@ -17,14 +18,17 @@ Parser::Parser(TokenList tokens)
     registerPrefix(TOKEN_LEFT_PAREN, [](Parser& p, Token& /*prev*/) { return p.parseGroup(); });
     registerPrefix(TOKEN_MINUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
     registerPrefix(TOKEN_PLUS, [](Parser& p, Token &prev) { return p.parseUnary(prev); });
+    registerPrefix(TOKEN_STAR, [](Parser &p, Token &prev) { return p.parseUnary(prev); });
+    registerPrefix(TOKEN_AND, [](Parser &p, Token &prev) { return p.parseUnary(prev); });
 
+    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseAssignment(std::move(left), allowAssignment); }, 5);
     registerInfix(TOKEN_PLUS, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 10);
     registerInfix(TOKEN_MINUS, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 10);
     registerInfix(TOKEN_STAR, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 20);
     registerInfix(TOKEN_SLASH, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseBinaryOp(std::move(left), allowAssignment); }, 20);
+    registerInfix(TOKEN_DOT, [](Parser &p, ExprPtr left, bool allowAssignment = true) { return p.parseInvocation(std::move(left), allowAssignment); }, 25);
     registerInfix(TOKEN_LEFT_PAREN, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseFunctionCall(std::move(left), allowAssignment); }, 30);
     registerInfix(TOKEN_LEFT_BRACKET, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseIndexing(std::move(left), allowAssignment); }, 30);
-    registerInfix(TOKEN_EQUAL, [](Parser& p, ExprPtr left, bool allowAssignment = true) { return p.parseAssignment(std::move(left), allowAssignment); }, 5);
 }
 
 bool Parser::isEof()
@@ -47,7 +51,7 @@ Token Parser::peek(size_t offset)
 
     if (this->parse_curr + offset >= this->token_list.size()) 
     {
-        // TODO: Add proper error handling
+        // TODO: This type of error handling is probably insufficient
         Token token;
         token.kind = TOKEN_EOF;
         return token;
@@ -69,42 +73,33 @@ bool Parser::parse()
 {
     this->module = new ASTModule();
     while (!isEof())
-    {
-        //Token token = peek(0);
-
-        /*if ( TOKEN_VAR == token.kind ) 
-        {
-            StmtPtr stmt = parseVarDeclaration();
-            std::cout << "STATEMENT: " << stmt->print() << std::endl;
-        }
-        else*/ 
-        /*if ( TOKEN_IF == token.kind )
-        {
-            //consume();
-            StmtPtr stmt = parseIfStatement();
-            if (stmt != nullptr)
-                std::cout << "STATEMENT: " << stmt->print() << std::endl;
-        }*/
-
-        /*if (peek(0).kind == TOKEN_SEMICOLON)
-            std::cout << "Expression end\n";*/
-        /*ExprPtr expr = parseExpression(0);
-        if ( expr == nullptr ) 
-        {
-            std::cout << "Failed to parse expression!" << std::endl;
-            return false;
-        }
-        std::cout << "Expression: " << expr->print() << std::endl;*/
-        
+    {      
         Token token = peek(0);
 
-        if (token.kind == TOKEN_PURE) std::cout << "Parsing pure func." << std::endl;
-        else if (token.kind == TOKEN_RECORD) std::cout << "Parsing record." << std::endl;
-        else if (token.kind == TOKEN_ENTITY) std::cout << "Parsing entity." << std::endl;
-        else if (token.kind == TOKEN_ENTRY) { std::cout << "Entry" << std::endl; this->module->entry = parseEntry(); if (!this->module->entry) return false; }
-        else if (token.kind == TOKEN_IMPORT) { std::cout << "Import" << std::endl; if ( !parseImport() ) return false;  } // TODO: add error logging here
-        else if (token.kind == TOKEN_MODULE) { std::cout << "Module" << std::endl; if ( !parseModule() ) return false; } // TODO: add error logging here
-        else if (token.kind == TOKEN_COMMENT_SINGLE || token.kind == TOKEN_MULTI_COMMENT) {}
+        if (token.kind == TOKEN_PURE) std::cout << "Parsing pure func." << std::endl;     // TODO: Missing implementation
+        else if (token.kind == TOKEN_RECORD) std::cout << "Parsing record." << std::endl; // TODO: Missing implementation
+        else if (token.kind == TOKEN_ENTITY) std::cout << "Parsing entity." << std::endl; // TODO: Missing implementation
+        else if (token.kind == TOKEN_ENTRY) 
+        { 
+            this->module->entry = parseEntry(); 
+            
+            // TODO: add error logging here
+            if (!this->module->entry) 
+                return false; 
+        }
+        else if (token.kind == TOKEN_IMPORT) 
+        {
+            // TODO: add error logging here 
+            if ( !parseImport() ) 
+                return false;  
+        } 
+        else if (token.kind == TOKEN_MODULE) 
+        {
+            // TODO: add error logging here
+            if ( !parseModule() ) 
+                return false; 
+        }
+        else if (token.kind == TOKEN_COMMENT_SINGLE || token.kind == TOKEN_MULTI_COMMENT) consume();
         else 
         {
             // TODO: Proper logging here, please
@@ -145,7 +140,9 @@ bool Parser::parseModule()
 bool Parser::parseImport()
 {
     bool verdict = false;
+    consume();
     Token token = peek(0);
+
     if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek().kind == TOKEN_SEMICOLON)
     {
         this->module->dependencies.insert(token.lexeme);
@@ -161,7 +158,7 @@ ExprPtr Parser::parseExpression(uint8_t precedence, bool allowAssignment)
     auto prefixIt = prefixParseFns.find(token.kind);
     
     if (prefixIt == prefixParseFns.end()) {
-        // TODO: proper error handling here
+        // TODO: proper error logging here
         std::cout << "Unexpected token \'" << token.lexeme << "\'." << std::endl;
         return nullptr;
     }
@@ -196,8 +193,8 @@ ExprPtr Parser::parseNumber(Token &token)
     }
     catch(const std::exception& e)
     {
-        // TODO: Implement proper number parsing the remove the try/catch shit
-        std::cerr << "FAILED to parse " << token.lexeme << " " << e.what() << '\n';
+        // TODO: proper error logging here, please
+        std::cerr << "Invalid numeric format \'" << token.lexeme << "\'! Parsing failed with error: " << e.what() << std::endl;
         exit(2);
     }
 
@@ -219,6 +216,7 @@ ExprPtr Parser::parseChar(Token &token)
     std::string value ;
     if (token.lexeme.length() != 3 && token.lexeme.length() != 4) 
     {
+        // TODO: proper error logging here
         std::cout << "Invalid char!" << std::endl;
         exit(2);
     }
@@ -237,7 +235,7 @@ ExprPtr Parser::parseGroup()
     ExprPtr expr = parseExpression();
     
     if (peek(0).kind != TOKEN_RIGHT_PAREN) {
-        // TODO: error handling needed
+        // TODO: error logging needed
         std::cout << "Expected ')'" << std::endl;
         return nullptr;
     }
@@ -254,13 +252,6 @@ ExprPtr Parser::parseBinaryOp(ExprPtr left, bool /*allowAssignment*/)
 
 ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment) 
 {
-    // TODO: proper implementation here
-    /*std::string name = peek(0).lexeme;
-    advance();
-    ExprPtr value = parseExpression();
-    return std::make_unique<AssignmentExpr>(name, std::move(value));*/
-
-    std::cout << "Assign: " << left->print() << std::endl;
     if (!allowAssignment)
     {
         std::cout << "Do not allow assignment!" << std::endl;
@@ -278,6 +269,13 @@ ExprPtr Parser::parseFunctionCall(ExprPtr /*left*/, bool /*allowAssignment*/) {
     return nullptr;
 }
 
+ExprPtr Parser::parseInvocation(ExprPtr left, bool allowAssignment)
+{
+    TokenKind op = previous().kind;
+    ExprPtr right = parseExpression(precedences[op], allowAssignment);
+    return std::make_unique<InvocationExpr>(std::move(left), std::move(right));
+}
+
 ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
     ExprPtr index = parseExpression(false);
     if (peek(0).kind != TOKEN_RIGHT_BRACKET) {
@@ -287,7 +285,6 @@ ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
     return std::make_unique<IndexExpr>(std::move(left), std::move(index));
 }
 
-// TODO: Parsing type should be in a different function
 StmtPtr Parser::parseVarDeclaration()
 {
     consume(); // Eat the VAR keyword
@@ -381,7 +378,7 @@ StmtPtr Parser::parseBlockStatement()
 
 StmtPtr Parser::parseStatement()
 {
-    // TODO: Implement the rest of the statement structures
+    // TODO: Implement the rest of the statement structures like ExprStatement, loops etc.
     switch (peek(0).kind)
     {
         case TOKEN_LEFT_CURLY:
@@ -391,7 +388,6 @@ StmtPtr Parser::parseStatement()
         case TOKEN_IF:
             return parseIfStatement();
         default:
-
             std::cout << "Error parsing statements!" << std::endl;
             return nullptr;
     }
@@ -400,9 +396,7 @@ StmtPtr Parser::parseStatement()
 StmtPtr Parser::parseEntry()
 {
     consume(); // Eat the entry keyword
-    std::cout << "Parsing entry..." << std::endl;
     StmtPtr body = parseBlockStatement();
-    std::cout << "Entry: " << body->print() << std::endl;
     return body;
 }
 

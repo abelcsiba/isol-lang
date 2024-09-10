@@ -16,6 +16,7 @@ private:
     TokenList token_list;
     size_t parse_curr;
     ASTModule* module;
+    std::string source_file;
 
     using PrefixParseFn = std::function<ExprPtr(Parser&, Token&)>;
     using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr, bool)>;
@@ -39,6 +40,7 @@ private:
     ExprPtr parseAssignment(ExprPtr left, bool allowAssignment);
     ExprPtr parseFunctionCall(ExprPtr left, bool allowAssignment);
     ExprPtr parseIndexing(ExprPtr left, bool allowAssignment);
+    ExprPtr parseInvocation(ExprPtr left, bool allowAssignment);
 
     StmtPtr parseVarDeclaration();
     StmtPtr parseIfStatement();
@@ -62,7 +64,7 @@ private:
     bool parseImport();
 
 public:
-    Parser(TokenList tokens);
+    Parser(std::string file, TokenList tokens);
     bool parse();
 
     ASTModule* getModule();
