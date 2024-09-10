@@ -40,7 +40,7 @@ void Diagnostics::log(Message message, LogLevel level)
     }
     else
     {
-            std::cout << output << std::endl;
-            std::cout << std::format("    {0} | {1}", message.loc.col, message.other_info) << std::endl;
+        std::cout << output << std::endl;
+        std::cout << std::format("    {0} | {1}", message.loc.col, message.other_info) << std::endl;
     }
 }
