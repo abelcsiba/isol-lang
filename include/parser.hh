@@ -13,10 +13,9 @@
 
 class Parser {
 private:
-    TokenList token_list;
+    CodeFile *file;
     size_t parse_curr;
     ASTModule* module;
-    std::string source_file;
 
     using PrefixParseFn = std::function<ExprPtr(Parser&, Token&)>;
     using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr, bool)>;
@@ -64,7 +63,7 @@ private:
     bool parseImport();
 
 public:
-    Parser(std::string file, TokenList tokens);
+    Parser(CodeFile *file);
     bool parse();
 
     ASTModule* getModule();

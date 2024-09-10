@@ -5,9 +5,8 @@
 #include "consts.hh"
 #include <unistd.h>
 
-Lexer::Lexer(const char* raw_code, CodeFile file)
+Lexer::Lexer(CodeFile *file)
 {
-    this->code = raw_code;
     this->lex_begin = 0;
     this->lex_curr = 0;
     this->loc.col = 0;
@@ -19,34 +18,34 @@ Lexer::Lexer(const char* raw_code, CodeFile file)
 
 bool Lexer::isEof() 
 {
-    return ( lex_curr == this->code.length());
+    return ( lex_curr == strlen(file->code));
 }
 
 bool Lexer::isWhitespace()
 {
-    if (lex_curr >= this->code.length()) return false;
-    char cur = this->code.at(lex_curr);
+    if (lex_curr >= strlen(file->code)) return false;
+    char cur = file->code[lex_curr];
     return ( cur == '\n' || cur == '\r' || cur == '\t' || cur == ' ' );
 }
 
 bool Lexer::isDigit(size_t offset)
 {
-    if ( (lex_curr + offset) >= this->code.length()) return false;
-    char cur = this->code.at(lex_curr);
+    if ( (lex_curr + offset) >= strlen(file->code)) return false;
+    char cur = file->code[lex_curr];
     return ( cur >= '0' && cur <= '9' );
 }
 
 bool Lexer::isShadower()
 {
-    if (lex_curr >= this->code.length()) return false;
-    char cur = this->code.at(lex_curr);
+    if (lex_curr >= strlen(file->code)) return false;
+    char cur = file->code[lex_curr];
     return cur == '_';
 }
 
 bool Lexer::isAlpha()
 {
-    if (lex_curr >= this->code.length()) return false;
-    char cur = this->code.at(lex_curr);
+    if (lex_curr >= strlen(file->code)) return false;
+    char cur = file->code[lex_curr];
     return ( ( cur >= 'a' && cur <= 'z') || ( cur >= 'A' && cur <= 'Z' ) );
 }
 
@@ -68,7 +67,7 @@ void Lexer::advance(int offset)
 {
     for (int i = 0; i < offset; i++)
     {
-        if (this->code.at(this->lex_curr + i) == '\n')
+        if (file->code[lex_curr + i] == '\n')
         {
             this->loc.col = 0;
             this->loc.row++;
@@ -85,8 +84,8 @@ void Lexer::advance(int offset)
 char Lexer::peek(int offset)
 {
     // TODO: This is a horrible hack, fix it!
-    if (lex_curr + offset >= this->code.length()) return '$';
-    return this->code.at(lex_curr + offset);
+    if (lex_curr + offset >= strlen(file->code)) return '$';
+    return file->code[lex_curr + offset];
 }
 
 void Lexer::eatMultilineComment(Token &token)
@@ -224,7 +223,7 @@ Token Lexer::consume(TokenKind kind, int offset)
     adjustPos(offset);
     Token token;
     size_t lexeme_size = 0;
-    if (lex_curr == this->code.length())
+    if (lex_curr == strlen(file->code))
     {
         token.lexeme = "\0";
     }
@@ -232,8 +231,7 @@ Token Lexer::consume(TokenKind kind, int offset)
     {
         lexeme_size = this->lex_curr - this->lex_begin;
         if (kind == TOKEN_COMMENT_SINGLE) lexeme_size -= 1;
-
-        token.lexeme = this->code.substr(this->lex_begin, lexeme_size);
+        token.lexeme = std::string(file->code + lex_begin, lexeme_size);
     }
     //std::cout << "Consume: " << lex_curr << " " << lex_begin << " lexeme: " << token.lexeme << std::endl;
     Location token_location;
@@ -250,7 +248,7 @@ Token Lexer::consume(TokenKind kind, int offset)
 bool Lexer::match(const char *keyword)
 {
     size_t lexeme_size = this->lex_curr - this->lex_begin - 1;
-    return (lexeme_size > strlen(keyword) ? false : std::memcmp(keyword, this->code.substr(this->lex_begin, lexeme_size).data(), strlen(keyword)) == 0);
+    return (lexeme_size > strlen(keyword) ? false : std::memcmp(keyword, &file->code[lex_begin], strlen(keyword)) == 0);
 }
 
 void Lexer::matchKeywords(Token &token)
@@ -334,7 +332,7 @@ Token Lexer::nextToken()
     else if ( c == '&' ) token = consume(TOKEN_AND, 1);
     else if (isAlpha() || isShadower()) eatIdentifier(token);
     else if (isDigit()) eatNumber(token);
-    else if (lex_curr == this->code.length()) 
+    else if (lex_curr == strlen(file->code)) 
     {
         token = consume(TOKEN_EOF);
     }
@@ -354,7 +352,7 @@ void Lexer::addEofToken()
     loc.row = this->loc.row;
     token.location = loc;
     token.kind = TOKEN_EOF;
-    token_list.push_back(token);
+    this->file->tokens.push_back(token);
 }
 
 bool Lexer::lex() 
@@ -371,20 +369,15 @@ bool Lexer::lex()
     {
         this->lex_begin = this->lex_curr;
         Token token = nextToken();
-        token_list.push_back(token);
+        this->file->tokens.push_back(token);
         if (token.kind == TOKEN_ERROR) 
         {
             return false;
         }
     }
 
-    if (token_list.back().kind != TOKEN_EOF)
+    if (this->file->tokens.back().kind != TOKEN_EOF)
         addEofToken();
 
     return verdict;
-}
-
-std::vector<Token> Lexer::getTokens()
-{
-    return token_list;
 }

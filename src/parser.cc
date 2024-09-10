@@ -5,11 +5,10 @@
 #include "parser.hh"
 
 
-Parser::Parser(std::string file, TokenList tokens)
+Parser::Parser(CodeFile *file)
 {
-    this->token_list = tokens;
     this->parse_curr = 0;
-    this->source_file = file;
+    this->file = file;
 
     registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
     registerPrefix(TOKEN_STRING_LITERAL, [](Parser& p, Token &prev) { return p.parseString(prev); });
@@ -33,12 +32,12 @@ Parser::Parser(std::string file, TokenList tokens)
 
 bool Parser::isEof()
 {
-    return token_list[this->parse_curr].kind == TOKEN_EOF;
+    return this->file->tokens[this->parse_curr].kind == TOKEN_EOF;
 }
 
 Token Parser::advance()
 {
-    return token_list[parse_curr++];
+    return this->file->tokens[parse_curr++];
 }
 
 void Parser::consume(size_t offset)
@@ -49,19 +48,19 @@ void Parser::consume(size_t offset)
 Token Parser::peek(size_t offset)
 {
 
-    if (this->parse_curr + offset >= this->token_list.size()) 
+    if (this->parse_curr + offset >= this->file->tokens.size()) 
     {
         // TODO: This type of error handling is probably insufficient
         Token token;
         token.kind = TOKEN_EOF;
         return token;
     }
-    return token_list[this->parse_curr + offset];
+    return this->file->tokens[this->parse_curr + offset];
 }
 
 Token Parser::previous()
 {
-    return token_list[parse_curr - 1]; 
+    return this->file->tokens[parse_curr - 1]; 
 }
 
 bool Parser::match(TokenKind kind)

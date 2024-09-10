@@ -9,6 +9,7 @@ typedef struct {
     std::string name;
     std::filesystem::path location;
     char *code;
+    TokenList tokens;
 } CodeFile;
 
 std::string tokenKindToString(TokenKind kind);

@@ -16,9 +16,7 @@ private:
     size_t lex_begin;
     size_t lex_curr;
     Location loc;
-    CodeFile file;
-
-    TokenList token_list;
+    CodeFile *file;
 
     // ----- Helpers -----
     bool isEof();
@@ -45,9 +43,7 @@ private:
     void addEofToken();
 
 public: 
-    Lexer(const char* raw_code, CodeFile file);
-
-    TokenList getTokens();
+    Lexer(CodeFile *file);
 
     bool lex();    
 };

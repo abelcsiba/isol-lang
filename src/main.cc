@@ -53,31 +53,27 @@ int main(int argc, char **argv)
 		exit(2);
 	}
 
-	Lexer *lexer = new Lexer(/*buffer*/ cfile.code, cfile);
+	Lexer *lexer = new Lexer(&cfile);
 
 	bool verdict = lexer->lex();
 
 	if (!verdict) 
 	{
-		//duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
 		duration = Time::now() - begin_time;
 		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
 		exit(2);
 	}
 
-	std::vector<Token> tokens = lexer->getTokens();
-
 	if (flag == "print")
-		for (size_t i = 0; i < tokens.size(); i++)
-			prettyPrintToken(tokens.at(i));
+		for (size_t i = 0; i < cfile.tokens.size(); i++)
+			prettyPrintToken(cfile.tokens.at(i));
 
-	Parser *parser = new Parser(cfile.name, std::move(tokens));
+	Parser *parser = new Parser(&cfile);
 
 	verdict = parser->parse();
 
 	if (!verdict) 
 	{
-		//duration = float( clock () - begin_time ) /  CLOCKS_PER_SEC;
 		duration = Time::now() - begin_time;
 		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
 		exit(2);
