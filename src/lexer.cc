@@ -188,7 +188,6 @@ void Lexer::eatNumber(Token &token)
         token = consume(TOKEN_FLOAT_LITERAL);
         if (dec_count > 1 || !isDigit(-1))
         {
-            std::cout << "Peek: " << peek(-1) << " Dec count " << dec_count << " " << (isDigit(-1) ? "true" : "false") << std::endl;
             diag->error(report("Syntax error", "Invalid floating point number format", &token));
         }
     } 
@@ -218,7 +217,6 @@ void Lexer::eatCharLiteral(Token &token)
     } else token = consume(TOKEN_CHAR_LITERAL, 1);
     if (token.lexeme.length() > 4 || (token.lexeme.size() == 4 && token.lexeme[1] != '\\'))
     {
-        // TODO: Validate escape sequences properly
         diag->error(report("Syntax error", "Invalid character format", &token));
         token.kind = TOKEN_ERROR;
         token.err = INVALID_CHAR_VALUE;

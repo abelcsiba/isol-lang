@@ -235,6 +235,11 @@ std::string parseEscapeSequences(std::string_view data)
             if (c1 == 'n') value += '\n';
             else if (c1 == 't') value += '\t';
             else if (c1 == 'r') value += '\r';
+            else if (c1 == 'a') value += '\a';
+            else if (c1 == 'b') value += '\b';
+            else if (c1 == 'e') value += '\e';
+            else if (c1 == 'v') value += '\v';
+            else if (c1 == 'f') value += '\f';
             else if (c1 == '\\') value += '\\';
             else if (c1 == '\'') value += '\'';
             else if (c1 == '\"') value += '\"';

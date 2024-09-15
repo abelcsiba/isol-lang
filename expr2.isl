@@ -7,6 +7,7 @@ import std;
 entry {
     var test : char = 'a';
     var inv : i8 = tmp.foo * 3.0;
+    var duration : float = 3.5.4;
 
     if (2+3)
     {
