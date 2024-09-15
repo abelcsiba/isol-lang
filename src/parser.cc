@@ -196,7 +196,7 @@ ExprPtr Parser::parseNumber(Token &token)
     }
     catch(const std::exception& e)
     {
-        diag->error(report("Invalid numeric format \'" + token.lexeme + "\'!", std::string{"Parsing failed with error: "} + e.what()));
+        diag->error(report("Invalid numeric format \'" + token.lexeme + "\'!", std::string{"Parsing failed with error: "} + e.what(), &token));
     }
 
     return nullptr;

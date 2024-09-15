@@ -70,6 +70,7 @@ public:
         log(message, LogLevel::ERROR);
         fsec duration = Time::now() - begin_time;
         std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+        std::cout << '\n';
         exit(2); 
     }
     void critical(Message message) 
@@ -77,6 +78,7 @@ public:
         log(message, LogLevel::CRITICAL); 
         fsec duration = Time::now() - begin_time;
         std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+        std::cout << '\n';
         exit(2); 
     }
 private:

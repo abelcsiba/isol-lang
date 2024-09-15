@@ -38,8 +38,6 @@ int main(int argc, char **argv)
 	FileManager manager;
 	Diagnostics *diagnostics = new Diagnostics("", LogLevel::INFO);
 
-	//diagnostics.warning({ .file = "main.cc", .loc = { .col = 2, .row = 3}, .msg = "This is a warning.", .other_info = "Eat shit and die"} );
-
 	int error = manager.loadFile(cfile, argv[1]);
 
 	if (error != 0)
@@ -70,6 +68,7 @@ int main(int argc, char **argv)
 
 	verdict = parser->parse();
 
+	// This should be removed when diag is finished
 	if (!verdict) 
 	{
 		duration = Time::now() - begin_time;

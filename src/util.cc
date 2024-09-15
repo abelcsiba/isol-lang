@@ -217,6 +217,10 @@ int64_t getNumericValue(std::string num)
         start = it + 1;
         base = std::stoi(num.substr(0, it));
     }
+
+    std::string val = num.substr(start, num.length() - start);
+    if (val.length() == 0)
+        throw std::runtime_error("Missing numeric literal after base specification");
     
     // TODO: add error handling here. What if num cannot be converted?
     return std::stoi(num.substr(start, num.length() - start), nullptr, base);

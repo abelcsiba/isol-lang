@@ -22,13 +22,13 @@ void Diagnostics::log(Message message, LogLevel level)
 
     std::string color_code = (use_colors) ? color_codes.find(level)->second : "";
     std::string color_rst = (use_colors) ? RESET : "";
-    std::string output = std::format("{0}{1}:{2}:{3}: {4}{5}{6} {7}", WHITE, 
-                                                              message.file, 
-                                                              message.loc.row, 
-                                                              message.loc.col, 
-                                                              color_code, 
-                                                              level_name, 
-                                                              color_rst, 
+    std::string output = std::format("{0}{1}:{2}:{3}: {4}{5}{6} {7}", WHITE,
+                                                              message.file,
+                                                              message.loc.row,
+                                                              message.loc.col,
+                                                              color_code,
+                                                              level_name,
+                                                              color_rst,
                                                               message.msg);
 
     std::string side_panel = std::format("  {0} | ", message.loc.row);
