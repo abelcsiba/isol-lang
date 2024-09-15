@@ -9,8 +9,8 @@ Lexer::Lexer(CodeFile *file)
 {
     this->lex_begin = 0;
     this->lex_curr = 0;
-    this->loc.col = 0;
-    this->loc.row = 0;
+    this->loc.col = 1;
+    this->loc.row = 1;
     this->file = file;
 }
 
@@ -69,7 +69,7 @@ void Lexer::advance(int offset)
     {
         if (file->code[lex_curr + i] == '\n')
         {
-            this->loc.col = 0;
+            this->loc.col = 1;
             this->loc.row++;
         }
         else
@@ -124,7 +124,7 @@ void Lexer::eatSinglelineComment(Token &token)
     } while (peek(0) != '\n'); 
     token = consume(TOKEN_COMMENT_SINGLE, 1); 
     this->loc.row += 1;
-    this->loc.col = 0;
+    this->loc.col = 1;
 }
 
 void Lexer::eatIdentifier(Token &token)
@@ -183,6 +183,11 @@ void Lexer::eatNumber(Token &token)
 
 void Lexer::eatCharLiteral(Token &token)
 {
+    // Save starting position in case of error
+    int col = this->loc.col;
+    int row = this->loc.row;
+    // End save
+
     advance();
     while (!isEof() && peek(0) != '\'')
     {
@@ -191,12 +196,17 @@ void Lexer::eatCharLiteral(Token &token)
     
     if (isEof())
     {
+        token.location.col = col;
+        token.location.row = row;
+        token.lexeme = " \0";
+        diag->error(report("Missing symbol!", "Expected \' character at the end of char literal", &token));
         token.kind = TOKEN_ERROR;
         token.err = INVALID_CHAR_VALUE;
     } else token = consume(TOKEN_CHAR_LITERAL, 1);
-    if (token.lexeme.length() > 4)
+    if (token.lexeme.length() > 4 || (token.lexeme.size() == 4 && token.lexeme[1] != '\\'))
     {
         // TODO: Validate escape sequences properly
+        diag->error(report("Syntax error", "Invalid character format", &token));
         token.kind = TOKEN_ERROR;
         token.err = INVALID_CHAR_VALUE;
     }
@@ -204,6 +214,12 @@ void Lexer::eatCharLiteral(Token &token)
 
 void Lexer::eatStringLiteral(Token &token)
 {
+    // Save starting position in case of error
+    token.location.col = this->loc.col;
+    token.location.row = this->loc.row;
+    token.lexeme = " \0";
+    // End save
+
     advance();
     while (!isEof() && peek(0) != '"')
     {
@@ -212,6 +228,7 @@ void Lexer::eatStringLiteral(Token &token)
 
     if (isEof())
     {
+        diag->error(report("Missing symbol!", "Expected \" character at the end of str literal", &token));
         token.kind = TOKEN_ERROR;
         token.err = INVALID_STRING_VALUE;
     }
@@ -340,6 +357,7 @@ Token Lexer::nextToken()
     {
         token = consume(TOKEN_ERROR, 1);
         token.err = UNRECOGNIZED_SYMBOL;
+        diag->error(report("Unrecognized symbol!"));
     }
     return token;
 }
@@ -353,6 +371,21 @@ void Lexer::addEofToken()
     token.location = loc;
     token.kind = TOKEN_EOF;
     this->file->tokens.push_back(token);
+}
+
+void Lexer::setDiag(Diagnostics *diagnostics)
+{
+    this->diag = diagnostics;
+}
+
+Message Lexer::report(std::string message, std::string other_info, Token *token)
+{
+    return { .file = this->file->name, 
+             .chunk = getCodeLine((token == nullptr) ? this->loc : token->location, this->file->code), 
+             .loc = (token == nullptr) ? this->loc : token->location,
+             .length = (token == nullptr) ? 1 : token->lexeme.length(), 
+             .msg = message, 
+             .other_info = other_info };
 }
 
 bool Lexer::lex() 

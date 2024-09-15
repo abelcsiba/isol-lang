@@ -2,6 +2,7 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 
 #include "token.hh"
 
@@ -20,4 +21,6 @@ int64_t getNumericValue(std::string num);
 
 std::string operatorToString(TokenKind op);
 std::string parseEscapeSequences(std::string_view data);
+
+std::string getCodeLine(Location loc, char* const code);
 

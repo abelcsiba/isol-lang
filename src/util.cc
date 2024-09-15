@@ -244,3 +244,24 @@ std::string parseEscapeSequences(std::string_view data)
     return value;
 }
 
+std::string getCodeLine(Location loc, char* const code)
+{
+    size_t line_num = 1, index = 0;
+    size_t length = strlen(code);
+
+    while (line_num != static_cast<size_t>(loc.row) && index < length)
+        if (code[index++] == '\n')
+            line_num++;
+
+    size_t begin = index;
+
+    while (index < length && code[index] != '\n')
+        index++;
+
+    std::string line = "";
+    for (size_t i = begin; i < index; i++)
+        line += code[i];
+
+    return line;    
+}
+

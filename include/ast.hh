@@ -154,7 +154,7 @@ private:
 
 class ASTModule {
 public:
-    std::string module_name;
+    std::string name;
     std::set<std::string> dependencies;
     StmtPtr entry;
 };

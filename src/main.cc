@@ -14,12 +14,6 @@
 #include "file_manager.hh"
 #include "diagnostics.hh"
 
-constexpr char COMPILATION_OK[] = "\n\n{0}Compilation finished {1}successfully{2} ({3}){4}";
-constexpr char COMPILATION_ERROR[] = "\n\n{0}Compilation exited {1}abnormally{2} ({3}){4}";
-
-typedef std::chrono::high_resolution_clock Time;
-typedef std::chrono::milliseconds ms;
-typedef std::chrono::duration<float> fsec;
 
 int main(int argc, char **argv)
 {
@@ -42,7 +36,7 @@ int main(int argc, char **argv)
 
 	CodeFile cfile;
 	FileManager manager;
-	Diagnostics diagnostics{"", LogLevel::INFO};
+	Diagnostics *diagnostics = new Diagnostics("", LogLevel::INFO);
 
 	//diagnostics.warning({ .file = "main.cc", .loc = { .col = 2, .row = 3}, .msg = "This is a warning.", .other_info = "Eat shit and die"} );
 
@@ -50,10 +44,13 @@ int main(int argc, char **argv)
 
 	if (error != 0)
 	{
+		// TODO: log error
 		exit(2);
 	}
 
 	Lexer *lexer = new Lexer(&cfile);
+
+	lexer->setDiag(diagnostics);
 
 	bool verdict = lexer->lex();
 
@@ -69,6 +66,7 @@ int main(int argc, char **argv)
 			prettyPrintToken(cfile.tokens.at(i));
 
 	Parser *parser = new Parser(&cfile);
+	parser->setDiag(diagnostics);
 
 	verdict = parser->parse();
 

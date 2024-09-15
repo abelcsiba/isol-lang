@@ -7,6 +7,7 @@
 
 int FileManager::loadFile(CodeFile &file, const char* full_path)
 {
+    file.name = full_path;
 
     std::ifstream source(full_path, std::ios::binary);
 

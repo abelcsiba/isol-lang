@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
+#include <chrono>
 
 #include "token.hh"
 
@@ -26,7 +27,14 @@ enum class LogLevel {
 
 #define TAB_LENGHT 4
 
-std::string indent(size_t length = TAB_LENGHT);
+constexpr char COMPILATION_OK[] = "\n\n{0}Compilation finished {1}successfully{2} ({3}){4}";
+constexpr char COMPILATION_ERROR[] = "\n\n{0}Compilation exited {1}abnormally{2} ({3}){4}";
+
+std::string indent(size_t length = TAB_LENGHT, char div = ' ');
+
+typedef std::chrono::high_resolution_clock Time;
+typedef std::chrono::milliseconds ms;
+typedef std::chrono::duration<float> fsec;
 
 
 class Diagnostics {
@@ -34,6 +42,7 @@ public:
 
     Diagnostics(const char* log_file, LogLevel level) : dest(log_file), lvl(level) 
     {
+        this->begin_time = Time::now();
         if (strcmp(log_file, "") != 0)
         {
             dest.open(log_file, std::ios_base::app);
@@ -56,8 +65,20 @@ public:
 
     void info(Message message) { log(message, LogLevel::INFO); }
     void warning(Message message) { log(message, LogLevel::WARNING); }
-    void error(Message message) { log(message, LogLevel::ERROR); }
-    void critical(Message message) { log(message, LogLevel::CRITICAL); }
+    void error(Message message) 
+    {
+        log(message, LogLevel::ERROR);
+        fsec duration = Time::now() - begin_time;
+        std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+        exit(2); 
+    }
+    void critical(Message message) 
+    {
+        log(message, LogLevel::CRITICAL); 
+        fsec duration = Time::now() - begin_time;
+        std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+        exit(2); 
+    }
 private:
 
     void log(Message message, LogLevel level);
@@ -66,6 +87,7 @@ private:
     std::mutex mtx;
     LogLevel lvl;
     bool use_colors;
+    std::chrono::time_point<std::chrono::high_resolution_clock> begin_time;
 
     std::map<LogLevel, std::string> color_codes = 
     {

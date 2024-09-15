@@ -32,12 +32,12 @@ Parser::Parser(CodeFile *file)
 
 bool Parser::isEof()
 {
-    return this->file->tokens[this->parse_curr].kind == TOKEN_EOF;
+    return file->tokens[parse_curr].kind == TOKEN_EOF;
 }
 
 Token Parser::advance()
 {
-    return this->file->tokens[parse_curr++];
+    return file->tokens[parse_curr++];
 }
 
 void Parser::consume(size_t offset)
@@ -48,19 +48,19 @@ void Parser::consume(size_t offset)
 Token Parser::peek(size_t offset)
 {
 
-    if (this->parse_curr + offset >= this->file->tokens.size()) 
+    if (parse_curr + offset >= file->tokens.size()) 
     {
         // TODO: This type of error handling is probably insufficient
         Token token;
         token.kind = TOKEN_EOF;
         return token;
     }
-    return this->file->tokens[this->parse_curr + offset];
+    return file->tokens[parse_curr + offset];
 }
 
 Token Parser::previous()
 {
-    return this->file->tokens[parse_curr - 1]; 
+    return file->tokens[parse_curr - 1]; 
 }
 
 bool Parser::match(TokenKind kind)
@@ -82,31 +82,36 @@ bool Parser::parse()
         { 
             this->module->entry = parseEntry(); 
             
-            // TODO: add error logging here
             if (!this->module->entry) 
-                return false; 
+            {
+                diag->error(report("Syntax error in entry declaration!"));
+                return false;
+            }
         }
         else if (token.kind == TOKEN_IMPORT) 
         {
-            // TODO: add error logging here 
-            if ( !parseImport() ) 
-                return false;  
+            if ( !parseImport() )
+            {
+                diag->error(report("Syntax error in import declaration!"));
+                return false;
+            }  
         } 
         else if (token.kind == TOKEN_MODULE) 
         {
-            // TODO: add error logging here
-            if ( !parseModule() ) 
-                return false; 
+            if ( !parseModule() )
+            {
+                diag->error(report("Syntax error in module declaration!")); 
+                return false;
+            } 
         }
         else if (token.kind == TOKEN_COMMENT_SINGLE || token.kind == TOKEN_MULTI_COMMENT) consume();
         else 
         {
-            // TODO: Proper logging here, please
-            std::cout << "Unexpected symbol \'" << token.lexeme << "\'." << std::endl;
+            diag->error(report("Syntax error", "Unexpected symbol \'" + token.lexeme + "\'."));
             return false;
         }
     }
-    // TODO: fix return
+
     return true;
 }
 
@@ -123,13 +128,12 @@ bool Parser::parseModule()
 
     if ((token.kind != TOKEN_EOF && token.kind == TOKEN_IDENTIFIER) && peek().kind == TOKEN_SEMICOLON)
     {
-        if (module->module_name.size() != 0)
+        if (this->module->name.size() != 0)
         {
-            // TODO: This should be removed later, once there is error logging
-            std::cout << "Module redeclaration!" << std::endl;
+            diag->error(report("Syntax error", "Module redeclaration is not allowed in a compilation unit!"));
             return verdict;
         } 
-        module->module_name = token.lexeme;
+        this->module->name = token.lexeme;
         verdict = true;
         consume(2);
     }
@@ -157,8 +161,7 @@ ExprPtr Parser::parseExpression(uint8_t precedence, bool allowAssignment)
     auto prefixIt = prefixParseFns.find(token.kind);
     
     if (prefixIt == prefixParseFns.end()) {
-        // TODO: proper error logging here
-        std::cout << "Unexpected token \'" << token.lexeme << "\'." << std::endl;
+        diag->error(report("Unexpected token \'" + token.lexeme + "\'."));
         return nullptr;
     }
 
@@ -192,9 +195,7 @@ ExprPtr Parser::parseNumber(Token &token)
     }
     catch(const std::exception& e)
     {
-        // TODO: proper error logging here, please
-        std::cerr << "Invalid numeric format \'" << token.lexeme << "\'! Parsing failed with error: " << e.what() << std::endl;
-        exit(2);
+        diag->error(report("Invalid numeric format \'" + token.lexeme + "\'!", std::string{"Parsing failed with error: "} + e.what()));
     }
 
     return nullptr;
@@ -215,9 +216,7 @@ ExprPtr Parser::parseChar(Token &token)
     std::string value ;
     if (token.lexeme.length() != 3 && token.lexeme.length() != 4) 
     {
-        // TODO: proper error logging here
-        std::cout << "Invalid char!" << std::endl;
-        exit(2);
+        diag->error(report("Invalid character declaration!", "Only ASCII characters and escape sequences are currently supported!"));
     }
     else value = token.lexeme.substr(1, token.lexeme.length() - 2);
     
@@ -234,8 +233,7 @@ ExprPtr Parser::parseGroup()
     ExprPtr expr = parseExpression();
     
     if (peek(0).kind != TOKEN_RIGHT_PAREN) {
-        // TODO: error logging needed
-        std::cout << "Expected ')'" << std::endl;
+        diag->error(report("Missing symbol!", "Expected ')' character  at position"));
         return nullptr;
     }
     advance(); 
@@ -253,8 +251,7 @@ ExprPtr Parser::parseAssignment(ExprPtr left, bool allowAssignment)
 {
     if (!allowAssignment)
     {
-        std::cout << "Do not allow assignment!" << std::endl;
-        std::cout << "Expr: " << left->print() << std::endl;
+        diag->error(report("Syntax error", "Assignment is not allowed in expression!"));
         return nullptr;
     }
     TokenKind op = previous().kind;
@@ -277,6 +274,7 @@ ExprPtr Parser::parseInvocation(ExprPtr left, bool allowAssignment)
 ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
     ExprPtr index = parseExpression(false);
     if (peek(0).kind != TOKEN_RIGHT_BRACKET) {
+        diag->error(report("Missing symbol!", "Expected ']' character  at position"));
         return nullptr;;
     }
     consume(); // eat ']'
@@ -291,8 +289,7 @@ StmtPtr Parser::parseVarDeclaration()
     if ( TOKEN_IDENTIFIER != token.kind )
     {
         // TODO: Register name in scope. Also check for redeclaration + proper error handling
-        std::cout << "Expected identifier name!" << std::endl;
-        exit(2);
+        diag->error(report("Syntax error", "Expected identifier name in variable declaration"));
     }
     var_name = token.lexeme;
     
@@ -300,16 +297,12 @@ StmtPtr Parser::parseVarDeclaration()
     
     if ( !match(TOKEN_EQUAL) )
     {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \'=\'!" << std::endl;
-        exit(2);
+        diag->error(report("Missing symbol!", "Expected '=' character  at position"));
     }
     ExprPtr rhs = parseExpression(0, false);
     if ( !match(TOKEN_SEMICOLON) )
     {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \';\'!" << std::endl;
-        exit(2);
+        diag->error(report("Missing symbol!", "Expected ';' character  at position"));
     }
     
     return std::make_shared<VarDecStmt>(var_name, type, std::move(rhs));
@@ -321,9 +314,7 @@ TypeInfo Parser::parseTypeInfo()
     Token token = advance();
     if ( TOKEN_COLON != token.kind )
     {
-        // TODO: proper error handling here, please
-        std::cout << "Expected symbol \':\'!" << std::endl;
-        exit(2);
+        diag->error(report("Missing symbol!", "Expected ':' character  at position"));
     }
     token = advance();
     if ( !token.isOneOf(TOKEN_IDENTIFIER, 
@@ -336,9 +327,7 @@ TypeInfo Parser::parseTypeInfo()
                         TOKEN_STRING, 
                         TOKEN_BOOL))
     {
-        // TODO: proper error handling
-        std::cout << "Expected type identifier!" << std::endl;
-        exit(2);
+        diag->error(report("Syntax error", "Expected type identifier before assignment!", &token));
     }
 
     type.type_name = token.lexeme;
@@ -368,7 +357,13 @@ StmtPtr Parser::parseBlockStatement()
     {
         StmtPtr stmt = parseStatement();
         stmt_list.push_back(std::move(stmt));
-    } while (peek(0).kind != TOKEN_RIGHT_CURLY);
+    } while (!isEof() && peek(0).kind != TOKEN_RIGHT_CURLY);
+
+    if (isEof())
+    {
+        diag->error(report("Missing symbol!", "Expected '}' character  at position"));
+        return nullptr;
+    }
 
     consume(); // Eat the '}'
     return std::make_shared<BlockStmt>(std::move(stmt_list));
@@ -396,6 +391,21 @@ StmtPtr Parser::parseEntry()
     consume(); // Eat the entry keyword
     StmtPtr body = parseBlockStatement();
     return body;
+}
+
+void Parser::setDiag(Diagnostics *diagnostics)
+{
+    this->diag = diagnostics;
+}
+
+Message Parser::report(std::string message, std::string other_info, Token *token)
+{
+    return { .file = this->file->name, 
+             .chunk = getCodeLine(file->tokens[parse_curr].location, file->code), 
+             .loc = ( token == nullptr ) ? this->file->tokens[parse_curr].location : token->location, 
+             .length = ( token == nullptr ) ? file->tokens[parse_curr].lexeme.length() : token->lexeme.length(), 
+             .msg = message, 
+             .other_info = other_info };
 }
 
 void Parser::registerPrefix(TokenKind kind, PrefixParseFn fn) {

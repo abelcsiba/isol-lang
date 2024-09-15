@@ -8,6 +8,7 @@
 
 #include "token.hh"
 #include "util.hh"
+#include "diagnostics.hh"
 
 
 class Lexer {
@@ -17,6 +18,7 @@ private:
     size_t lex_curr;
     Location loc;
     CodeFile *file;
+    Diagnostics *diag;
 
     // ----- Helpers -----
     bool isEof();
@@ -25,6 +27,7 @@ private:
     bool isShadower();
     bool isAlpha();
     bool isAlphaNumeric();
+    Message report(std::string message, std::string other_info = "", Token *token = nullptr);
     
     // ----- Tokenizers -----
     void advance(int offset = 1);
@@ -44,6 +47,8 @@ private:
 
 public: 
     Lexer(CodeFile *file);
+
+    void setDiag(Diagnostics *diagnostics);
 
     bool lex();    
 };

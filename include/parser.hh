@@ -9,13 +9,14 @@
 
 #include "token.hh"
 #include "ast.hh"
-
+#include "diagnostics.hh"
 
 class Parser {
 private:
     CodeFile *file;
     size_t parse_curr;
     ASTModule* module;
+    Diagnostics *diag;
 
     using PrefixParseFn = std::function<ExprPtr(Parser&, Token&)>;
     using InfixParseFn = std::function<ExprPtr(Parser&, ExprPtr, bool)>;
@@ -57,6 +58,7 @@ private:
     Token peek(size_t offset = 1);
     Token previous();
     bool match(TokenKind kind);
+    Message report(std::string message, std::string other_info = "", Token *token = nullptr);
 
     // ----- Parsers -----
     bool parseModule();
@@ -65,6 +67,7 @@ private:
 public:
     Parser(CodeFile *file);
     bool parse();
+    void setDiag(Diagnostics *diagnostics);
 
     ASTModule* getModule();
 };

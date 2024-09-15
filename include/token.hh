@@ -35,8 +35,9 @@ typedef struct /* CustomValue */ {
 
 typedef struct /* Message */ {
     std::string file;
-    //std::string_view chunk; TODO: add code line for diagnostics logging
+    std::string chunk; // TODO: add code line for diagnostics logging
     Location loc;
+    size_t length;
     std::string msg;
     std::string other_info;
 } Message;

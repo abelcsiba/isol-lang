@@ -1,10 +1,11 @@
 module main;
+//module main;
 
 import std;
 // this is a comment
 
 entry {
-    var test : char = 'n';
+    var test : char = 'aa';
     var inv : i8 = tmp.foo * 3;
 
     if (2+3)
