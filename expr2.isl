@@ -5,8 +5,8 @@ import std;
 // this is a comment
 
 entry {
-    var test : char = 'aa';
-    var inv : i8 = tmp.foo * 3;
+    var test : char = 'a';
+    var inv : i8 = tmp.foo * 3.0;
 
     if (2+3)
     {

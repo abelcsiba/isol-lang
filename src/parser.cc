@@ -11,6 +11,7 @@ Parser::Parser(CodeFile *file)
     this->file = file;
 
     registerPrefix(TOKEN_NUM_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
+    registerPrefix(TOKEN_FLOAT_LITERAL, [](Parser& p, Token &prev) { return p.parseNumber(prev); });
     registerPrefix(TOKEN_STRING_LITERAL, [](Parser& p, Token &prev) { return p.parseString(prev); });
     registerPrefix(TOKEN_CHAR_LITERAL, [](Parser &p, Token &prev) { return p.parseChar(prev); });
     registerPrefix(TOKEN_IDENTIFIER, [](Parser& p, Token &prev) { return p.parseIdentifier(prev); }); 

@@ -31,7 +31,7 @@ bool Lexer::isWhitespace()
 bool Lexer::isDigit(size_t offset)
 {
     if ( (lex_curr + offset) >= strlen(file->code)) return false;
-    char cur = file->code[lex_curr];
+    char cur = file->code[lex_curr + offset];
     return ( cur >= '0' && cur <= '9' );
 }
 
@@ -154,10 +154,10 @@ void Lexer::eatIdentifier(Token &token)
 
 void Lexer::eatNumber(Token &token)
 {
-    // TODO: add support for floating point numnbers
     char c = peek(1);
     char c1 = peek(2);
     std::string base = "";
+    int dec_count = 0;
 
     if ( c == '#')
     {
@@ -169,16 +169,29 @@ void Lexer::eatNumber(Token &token)
         base = base + peek(0) + peek(1);
         advance(3);
     }
-    while ((base.length() == 0) ? isDigit() : isAlphaNumeric()) 
+    while ((base.length() == 0) ? ((isDigit() || peek(0) == '.')) : isAlphaNumeric()) 
     {
+        if (peek(0) == '.') dec_count++;
         advance();
     }
-    token = consume(TOKEN_NUM_LITERAL);
-    if (base.length() > 0 && !isValidNumber(base, &token.lexeme[base.length() + 2]))
+    if (dec_count == 0)
     {
-        token.kind = TOKEN_ERROR;
-        token.err = INVALID_NUM_VALUE;
+        token = consume(TOKEN_NUM_LITERAL);
+        if (base.length() > 0 && !isValidNumber(base, &token.lexeme[base.length() + 1]))
+        {
+            token.kind = TOKEN_ERROR;
+            token.err = INVALID_NUM_VALUE;
+        }
     }
+    else 
+    {
+        token = consume(TOKEN_FLOAT_LITERAL);
+        if (dec_count > 1 || !isDigit(-1))
+        {
+            std::cout << "Peek: " << peek(-1) << " Dec count " << dec_count << " " << (isDigit(-1) ? "true" : "false") << std::endl;
+            diag->error(report("Syntax error", "Invalid floating point number format", &token));
+        }
+    } 
 }
 
 void Lexer::eatCharLiteral(Token &token)
