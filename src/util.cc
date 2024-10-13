@@ -22,6 +22,8 @@ std::string tokenKindToString(TokenKind kind)
             return "TOKEN_CHAR_LITERAL";
         case TOKEN_COLON:
             return "TOKEN_COLON";
+        case TOKEN_COLON_COLON:
+            return "TOKEN_COLON_COLON";
         case TOKEN_COMMA:
             return "TOKEN_COMMA";
         case TOKEN_COMMENT_SINGLE:

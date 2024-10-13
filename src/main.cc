@@ -17,8 +17,6 @@
 
 int main(int argc, char **argv)
 {
-	auto begin_time = Time::now();
-	fsec duration;
 	CResult rc = SUCCESS;
 
 	if (argc < 2)
@@ -46,18 +44,18 @@ int main(int argc, char **argv)
 		exit(2);
 	}
 
+	std::cout << "\nCompilation started...\n\n";
+
 	Lexer *lexer = new Lexer(&cfile);
 
 	lexer->setDiag(diagnostics);
 
+	std::cout << "Compiling source file " << cfile.name << "." << std::endl;
+
 	bool verdict = lexer->lex();
 
 	if (!verdict) 
-	{
-		duration = Time::now() - begin_time;
-		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
-		exit(2);
-	}
+		diagnostics->reportResult(false);
 
 	if (flag == "print")
 		for (size_t i = 0; i < cfile.tokens.size(); i++)
@@ -68,16 +66,13 @@ int main(int argc, char **argv)
 
 	verdict = parser->parse();
 
+	std::cout << "Compiled source file " << cfile.name << "." << std::endl;
+
 	// This should be removed when diag is finished
 	if (!verdict) 
-	{
-		duration = Time::now() - begin_time;
-		std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
-		exit(2);
-	}
+		diagnostics->reportResult(false);
 
-	duration = Time::now() - begin_time;
-	std::cout << std::format(COMPILATION_OK, WHITE, GREEN, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
+	diagnostics->reportResult(true);
 
 	return rc;
 }

@@ -41,6 +41,7 @@ private:
     ExprPtr parseFunctionCall(ExprPtr left, bool allowAssignment);
     ExprPtr parseIndexing(ExprPtr left, bool allowAssignment);
     ExprPtr parseInvocation(ExprPtr left, bool allowAssignment);
+    ExprPtr parseResolution(std::string ns, bool allowAssignment);
 
     StmtPtr parseVarDeclaration();
     StmtPtr parseIfStatement();

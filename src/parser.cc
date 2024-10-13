@@ -272,6 +272,12 @@ ExprPtr Parser::parseInvocation(ExprPtr left, bool allowAssignment)
     return std::make_shared<InvocationExpr>(std::move(left), std::move(right));
 }
 
+ExprPtr Parser::parseResolution(std::string ns, bool allowAssignment)
+{
+    // TODO
+    return nullptr;
+}
+
 ExprPtr Parser::parseIndexing(ExprPtr left, bool /*allowAssignment*/) {
     ExprPtr index = parseExpression(false);
     if (peek(0).kind != TOKEN_RIGHT_BRACKET) {

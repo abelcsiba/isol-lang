@@ -335,6 +335,7 @@ Token Lexer::nextToken()
     else if ( c == '-' && c1 == '>' ) token = consume(TOKEN_ARROW, 2);
     else if ( c == '<' && c1 == '-' ) token = consume(TOKEN_GENERATOR, 2);
     else if ( c == '|' && c1 == '|' ) token = consume(TOKEN_PIPE_PIPE, 2);
+    else if ( c == ':' && c1 == ':' ) token = consume(TOKEN_COLON_COLON, 2);
     else if ( c == '/' && c1 == '/' ) eatSinglelineComment(token);
     else if ( c == '/' && c1 == '*' ) eatMultilineComment(token);
     else if ( c == '\'') eatCharLiteral(token);

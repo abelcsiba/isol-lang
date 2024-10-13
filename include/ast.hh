@@ -86,6 +86,16 @@ private:
     ExprPtr callee;
 };
 
+class ResolutionExpr : public Expr {
+public:
+    ResolutionExpr(std::string ns, ExprPtr rhs)
+        : ns(ns), rhs(std::move(rhs)) {}
+    std::string print() override { return ns + "::" + rhs->print(); }
+private:
+    std::string ns;
+    ExprPtr rhs;
+};
+
 class UnaryExpr : public Expr {
 public:
     UnaryExpr(TokenKind op, ExprPtr expr) : op(op), expr(std::move(expr)) {}

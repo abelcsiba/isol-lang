@@ -8,6 +8,7 @@
 #include <cstring>
 #include <map>
 #include <chrono>
+#include <cstdlib>
 
 #include "token.hh"
 
@@ -52,7 +53,7 @@ public:
                 exit(2);
             }
         }
-        use_colors = true;
+        use_colors = ((std::string{std::getenv("COLORTERM")}).contains("truecolor"));
     }
 
     ~Diagnostics()
@@ -68,19 +69,18 @@ public:
     void error(Message message) 
     {
         log(message, LogLevel::ERROR);
-        fsec duration = Time::now() - begin_time;
-        std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
-        std::cout << '\n';
+        reportResult(false);
         exit(2); 
     }
     void critical(Message message) 
     {
         log(message, LogLevel::CRITICAL); 
-        fsec duration = Time::now() - begin_time;
-        std::cout << std::format(COMPILATION_ERROR, WHITE, RED, WHITE, std::chrono::duration_cast<ms>(duration), RESET) << std::endl;
-        std::cout << '\n';
+        reportResult(false);
         exit(2); 
     }
+
+    void reportResult(bool verdict);
+
 private:
 
     void log(Message message, LogLevel level);

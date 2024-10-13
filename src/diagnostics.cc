@@ -21,8 +21,9 @@ void Diagnostics::log(Message message, LogLevel level)
     std::string level_name = level_names.find(level)->second;
 
     std::string color_code = (use_colors) ? color_codes.find(level)->second : "";
+    std::string bold_color = (use_colors) ? WHITE : "";
     std::string color_rst = (use_colors) ? RESET : "";
-    std::string output = std::format("{0}{1}:{2}:{3}: {4}{5}{6} {7}", WHITE,
+    std::string output = std::format("{0}{1}:{2}:{3}: {4}{5}{6} {7}", bold_color,
                                                               message.file,
                                                               message.loc.row,
                                                               message.loc.col,
@@ -58,4 +59,37 @@ void Diagnostics::log(Message message, LogLevel level)
                                                                                          color_rst) << std::endl;
         std::cout << indent(side_panel.length() - 2) << "|" << std::endl;
     }
+}
+
+void Diagnostics::reportResult(bool verdict)
+{
+    fsec duration = Time::now() - begin_time;
+    std::string output;
+
+    if (use_colors)
+    {
+        output = (verdict) ?
+            std::format(COMPILATION_OK, WHITE, (verdict ? GREEN : RED), WHITE, std::chrono::duration_cast<ms>(duration), RESET) :
+            std::format(COMPILATION_ERROR, WHITE, (verdict ? GREEN : RED), WHITE, std::chrono::duration_cast<ms>(duration), RESET);
+    }
+    else
+    {
+        output = (verdict) ?
+            std::format(COMPILATION_OK, "", "", "", std::chrono::duration_cast<ms>(duration), "") :
+            std::format(COMPILATION_ERROR, "", "", "", std::chrono::duration_cast<ms>(duration), "");
+    }
+
+    if (dest.is_open())
+    {
+        dest << output << std::endl;
+        dest << '\n';
+    }
+    else
+    {
+        std::cout << output << std::endl;
+        std::cout << '\n';
+    }
+
+    if (!verdict)
+        exit(2);
 }
